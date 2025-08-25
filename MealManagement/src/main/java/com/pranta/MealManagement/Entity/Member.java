@@ -3,7 +3,7 @@ package com.pranta.MealManagement.Entity;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import jakarta.annotation.Nullable;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
