@@ -3,7 +3,6 @@ package com.pranta.MealManagement.Entity;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import org.hibernate.annotations.IdGeneratorType;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
