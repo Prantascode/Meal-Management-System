@@ -40,8 +40,8 @@ public class Deposit {
     @Column(precision = 10, scale = 2, nullable = false)
     private BigDecimal amount;
 
-    @Column(name = "deposite_date")
-    private LocalDateTime depositeDate;
+    @Column(name = "deposit_date")
+    private LocalDateTime depositDate;
     
     private String discription;
 }
