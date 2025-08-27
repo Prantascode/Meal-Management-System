@@ -20,12 +20,12 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "male_entity")
+@Table(name = "male_entry")
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class MealEntity {
+public class MealEntry {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

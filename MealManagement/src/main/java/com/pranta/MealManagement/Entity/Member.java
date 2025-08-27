@@ -52,7 +52,7 @@ public class Member {
     private boolean active = true;
 
     @OneToMany(mappedBy = "member",cascade = CascadeType.ALL)
-    private List<MealEntity> mealEntities;
+    private List<MealEntry> mealEntities;
     
     @OneToMany(mappedBy = "member",cascade = CascadeType.ALL)
     private List<Deposit> deposits;
