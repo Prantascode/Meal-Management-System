@@ -4,7 +4,6 @@ import java.time.LocalDate;
 
 import com.pranta.MealManagement.Entity.MealEntry;
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -21,10 +20,10 @@ public class MealEntryDto {
     private Long memberId;
     private String memberName;
 
-    @NotBlank(message = "Date is required")
+    @NotNull(message = "Date is required")
     private LocalDate date;
 
-    @NotBlank(message = "Meal Type is required")
+    @NotNull(message = "Meal Type is required")
     private MealEntry.MealType mealType;
     
     @Min(value = 1,message = "meal count must be at least 1")

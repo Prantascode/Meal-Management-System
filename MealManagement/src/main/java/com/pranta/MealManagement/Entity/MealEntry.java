@@ -15,6 +15,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -34,7 +35,7 @@ public class MealEntry {
     @JoinColumn(name = "member_id",nullable = false)
     private Member member;
 
-    @NotBlank(message = "Date is required")
+    @NotNull(message = "Date is required")
     @Column(name = "date")
     private LocalDate date;
 
