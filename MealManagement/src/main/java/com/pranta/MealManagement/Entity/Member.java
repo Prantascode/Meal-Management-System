@@ -39,7 +39,11 @@ public class Member {
     @Column(unique = true,nullable = false)
     private String email;
 
-    @NotBlank(message = "Phone number is required")
+    @NotBlank(message = "Password is required")
+    @Column(nullable = false)
+    private String password;
+
+    //@NotBlank(message = "Phone number is required")
     private String phone;
 
     @Enumerated(EnumType.STRING)
