@@ -25,9 +25,6 @@ public class MemberDto {
     //@NotBlank(message = "Phone number is required")
     private String phone;
 
-    @NotBlank(message = "Password is required")
-    private String password;
-
     @Enumerated(EnumType.STRING)
     private Member.Role role;
 

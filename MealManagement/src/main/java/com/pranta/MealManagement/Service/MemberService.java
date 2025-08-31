@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.pranta.MealManagement.Dtos.MemberDto;
@@ -16,9 +15,6 @@ public class MemberService {
     
     @Autowired
     private MemberRepository memberRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
 
     public MemberDto registerMember(MemberDto memberDto){
         if (memberRepository.existsByEmail(memberDto.getEmail())) {
@@ -52,7 +48,6 @@ public class MemberService {
         member.setName(dto.getName());
         member.setEmail(dto.getEmail());
         member.setPhone(dto.getPhone());
-        member.setPassword(passwordEncoder.encode(dto.getPassword()));
         member.setRole(dto.getRole() != null ? dto.getRole() : Member.Role.MEMBER);
         member.setActive(dto.isActive());
 
