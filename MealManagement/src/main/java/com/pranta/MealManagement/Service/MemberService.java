@@ -1,6 +1,7 @@
 package com.pranta.MealManagement.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,31 @@ public class MemberService {
             .stream()
             .map(this::convertToDto)
             .collect(Collectors.toList());
+    }
+
+    public Optional<MemberDto> getMemberById(Long id){
+        return memberRepository.findById(id)
+                .map(this::convertToDto);
+    }
+    public MemberDto updateMember(Long id, MemberDto memberDto){
+        Member member = memberRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Member Not found"));
+
+        member.setName(memberDto.getName());
+        member.setEmail(memberDto.getEmail());
+        member.setPhone(memberDto.getPhone());
+        member.setRole(memberDto.getRole());
+        member.setActive(memberDto.isActive());
+
+        Member updateMember = memberRepository.save(member);
+        return convertToDto(updateMember);
+    }
+
+    public void deactivateMember(Long id){
+        Member member = memberRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Member Not Found"));
+        member.setActive(false);
+        memberRepository.save(member);  
     }
 
     private MemberDto convertToDto(Member member){
