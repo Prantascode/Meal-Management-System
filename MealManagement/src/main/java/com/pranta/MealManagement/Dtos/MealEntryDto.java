@@ -2,6 +2,7 @@ package com.pranta.MealManagement.Dtos;
 
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.pranta.MealManagement.Entity.MealEntry;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -20,6 +21,7 @@ public class MealEntryDto {
     private Long memberId;
     private String memberName;
 
+    @JsonFormat(pattern = "yyyy-MM-dd")
     @NotNull(message = "Date is required")
     private LocalDate date;
 

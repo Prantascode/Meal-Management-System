@@ -40,7 +40,7 @@ public class MealEntry {
     private LocalDate date;
 
     @Enumerated(EnumType.STRING)
-    @NotBlank(message = "Meal Type is required")
+    @NotNull(message = "Meal Type is required")
     private MealType mealType;
 
     @Column(name = "meal_count")
