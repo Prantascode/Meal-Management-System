@@ -58,6 +58,26 @@ public class MealService {
         return total != null ? total : 0;
     }
 
+    public MealEntryDto updateMealEntry(Long id, MealEntryDto mealEntryDto){
+        MealEntry mealEntry = mealEntryRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Meal Entry not found"));
+        
+        mealEntry.setDate(mealEntryDto.getDate());
+        mealEntry.setMealCount(mealEntryDto.getMealCount());
+        mealEntry.setMealType(mealEntryDto.getMealType());
+
+        MealEntry updateMealEntry = mealEntryRepository.save(mealEntry);
+        return convertToDto(updateMealEntry);
+    }
+
+    public void deleteMealEntry(Long id){
+        MealEntry mealEntry = mealEntryRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Meal Entry not found"));
+    
+    mealEntryRepository.delete(mealEntry);
+
+    }
+
     private MealEntryDto convertToDto(MealEntry mealEntry){
         MealEntryDto dto = new MealEntryDto();
         dto.setId(mealEntry.getId());
