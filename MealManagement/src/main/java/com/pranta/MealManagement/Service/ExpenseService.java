@@ -2,6 +2,11 @@ package com.pranta.MealManagement.Service;
 
 
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -33,6 +38,17 @@ public class ExpenseService {
 
         Expense saveExpense = expenseRepository.save(expense);
         return convertToDto(saveExpense);
+    }
+
+    public List<ExpenseDto> getExpensesByDateRange(LocalDate startDate, LocalDate endDate){
+        return expenseRepository.findByDateBetweenOrderByDateDesc(startDate,endDate)
+                .stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+    }
+    public BigDecimal getTotalExpensesByDateRange(LocalDate startDate, LocalDate endDate){
+        BigDecimal total = expenseRepository.getTotalExpensesBetweenDates(startDate, endDate);
+        return total != null ? total : BigDecimal.ZERO;
     }
 
     private ExpenseDto convertToDto(Expense expense){

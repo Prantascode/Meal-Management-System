@@ -1,13 +1,20 @@
 package com.pranta.MealManagement.Controller;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.pranta.MealManagement.Dtos.ExpenseDto;
@@ -33,6 +40,23 @@ public class ExpenseController {
         }catch(RuntimeException e){
             return ResponseEntity.notFound().build();
         }
+    }
 
+    @GetMapping
+    public ResponseEntity<List<ExpenseDto>> getExpensesByDateRangeet(
+        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)LocalDate startDate,
+        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)LocalDate endDate
+    ){
+        List<ExpenseDto> expense = expenseService.getExpensesByDateRange(startDate, endDate);
+        return ResponseEntity.ok(expense);
+    }
+
+    @GetMapping("/total")
+    public ResponseEntity<BigDecimal> getTotalExpensesByDateRange(
+         @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)LocalDate startDate,
+        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)LocalDate endDate
+    ){
+        BigDecimal totalExpense = expenseService.getTotalExpensesByDateRange(startDate, endDate);
+        return ResponseEntity.ok(totalExpense);
     }
 }
