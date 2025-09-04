@@ -10,9 +10,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -66,5 +68,25 @@ public class ExpenseController {
     public ResponseEntity<List<ExpenseDto>> getExpenseByCategory(@PathVariable Expense.ExpenseCategory category){
         List<ExpenseDto> expense = expenseService.getExpenseByCategory(category);
         return ResponseEntity.ok(expense);
+    }
+    @PutMapping("/{id}")
+    public ResponseEntity<ExpenseDto> updateExpense(@PathVariable Long id,@Valid @RequestBody ExpenseDto expenseDto){
+        try{
+            ExpenseDto updateDto = expenseService.updateExpense(id, expenseDto);
+                return ResponseEntity.ok(updateDto);
+        }catch(RuntimeException e){
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @DeleteMapping("{id}")
+    public ResponseEntity<Void> deleteExpense(@PathVariable Long id){
+        try{
+            expenseService.deleteExpense(id);
+            return ResponseEntity.ok().build();
+        }
+        catch(RuntimeException e){
+            return ResponseEntity.notFound().build();
+        }
     }
 }

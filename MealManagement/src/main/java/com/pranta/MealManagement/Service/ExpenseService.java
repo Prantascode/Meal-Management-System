@@ -50,13 +50,33 @@ public class ExpenseService {
         BigDecimal total = expenseRepository.getTotalExpensesBetweenDates(startDate, endDate);
         return total != null ? total : BigDecimal.ZERO;
     }
-    
+
     public List<ExpenseDto> getExpenseByCategory(Expense.ExpenseCategory expenseCategory){
         return expenseRepository.findByCategory(expenseCategory)
                 .stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     } 
+    public ExpenseDto updateExpense(Long id,ExpenseDto expenseDto){
+        Expense expense = expenseRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Expense not found"));
+        
+        expense.setAmount(expenseDto.getAmount());
+        expense.setCategory(expenseDto.getCategory());
+        expense.setDate(expenseDto.getDate());
+        expense.setDescription(expenseDto.getDescription());
+        
+        Expense updateExpense = expenseRepository.save(expense);
+        return convertToDto(updateExpense);
+
+    }
+
+    public void deleteExpense(Long id){
+        Expense expense = expenseRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Expense not Found"));
+
+        expenseRepository.delete(expense);
+    }
 
     private ExpenseDto convertToDto(Expense expense){
         ExpenseDto dto = new ExpenseDto();
