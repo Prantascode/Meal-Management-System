@@ -50,6 +50,13 @@ public class ExpenseService {
         BigDecimal total = expenseRepository.getTotalExpensesBetweenDates(startDate, endDate);
         return total != null ? total : BigDecimal.ZERO;
     }
+    
+    public List<ExpenseDto> getExpenseByCategory(Expense.ExpenseCategory expenseCategory){
+        return expenseRepository.findByCategory(expenseCategory)
+                .stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+    } 
 
     private ExpenseDto convertToDto(Expense expense){
         ExpenseDto dto = new ExpenseDto();

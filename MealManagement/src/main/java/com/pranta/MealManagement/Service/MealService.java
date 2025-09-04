@@ -1,4 +1,4 @@
-package com.pranta.MealManagement.Security;
+package com.pranta.MealManagement.Service;
 
 
 import java.time.LocalDate;
@@ -8,7 +8,9 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.pranta.MealManagement.Dtos.ExpenseDto;
 import com.pranta.MealManagement.Dtos.MealEntryDto;
+import com.pranta.MealManagement.Entity.Expense;
 import com.pranta.MealManagement.Entity.MealEntry;
 import com.pranta.MealManagement.Entity.Member;
 import com.pranta.MealManagement.Repository.MealEntryRepository;
