@@ -23,6 +23,7 @@ public class MemberService {
         }
 
         Member member = convertToEntity(memberDto);
+        
         Member savedMember = memberRepository.save(member);
         return convertToDto(savedMember);
     }
