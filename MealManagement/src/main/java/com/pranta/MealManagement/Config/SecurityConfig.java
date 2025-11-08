@@ -36,12 +36,19 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf().disable()
+        http
+            .csrf().disable()
             .authorizeHttpRequests()
-            .requestMatchers("/api/auth/**").permitAll()
-            .anyRequest().authenticated()
+                // Permit all requests for auth endpoints (register-admin, login, refresh-token, logout)
+                .requestMatchers("/api/auth/register-admin", "/api/auth/login", "/api/auth/refresh-token", "/api/auth/logout")
+                    .permitAll()
+                // All other requests require authentication
+                .anyRequest()
+                    .authenticated()
             .and()
-            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+                // Add JWT filter before UsernamePasswordAuthenticationFilter
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
 }

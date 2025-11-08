@@ -1,17 +1,22 @@
 package com.pranta.MealManagement.Controller;
 
 
+import com.pranta.MealManagement.Dtos.AdminRegisterDto;
 import com.pranta.MealManagement.Dtos.LoginRequestDto;
 import com.pranta.MealManagement.Dtos.RefreshTokenRequest;
 import com.pranta.MealManagement.Dtos.RegisterDto;
 import com.pranta.MealManagement.Entity.Member;
+import com.pranta.MealManagement.Entity.Mess;
 import com.pranta.MealManagement.Entity.RefreshToken;
+import com.pranta.MealManagement.Entity.Member.Role;
 import com.pranta.MealManagement.Repository.MemberRepository;
+import com.pranta.MealManagement.Repository.MessRepository;
 import com.pranta.MealManagement.Security.JwtUtil;
 import com.pranta.MealManagement.Service.RefreshTokenService;
 import lombok.RequiredArgsConstructor;
+
+
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,24 +29,32 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final RefreshTokenService refreshTokenService;
+    private final MessRepository massRepository;
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegisterDto registerDto) {
-        if (memberRepository.findByEmail(registerDto.getEmail()).isPresent()) {
-            return ResponseEntity.badRequest().body("Email already exists");
+    @PostMapping("/register-admin")
+    public ResponseEntity<?> registerAdmin(@RequestBody AdminRegisterDto dto){
+        if (memberRepository.existsByEmail(dto.getEmail())) {
+            return ResponseEntity.badRequest().body("Email Already Exists");
         }
 
-        Member member = new Member();
-        member.setName(registerDto.getName());
-        member.setEmail(registerDto.getEmail());
-        member.setPassword(passwordEncoder.encode(registerDto.getPassword()));
-        member.setRole(registerDto.getRole());
+        //Create new Mass
+        Mess mess = new Mess();
+        mess.setMessName(dto.getMessName());
+        massRepository.save(mess);
 
-        memberRepository.save(member);
-        return ResponseEntity.ok("User registered successfully");
+        //Create new Admin
+        Member admin = new Member();
+        admin.setName(dto.getName());
+        admin.setEmail(dto.getEmail());
+        admin.setPassword(passwordEncoder.encode(dto.getPassword()));
+        admin.setRole(Role.ADMIN);
+        admin.setMess(mess);
+
+        memberRepository.save(admin);
+        return ResponseEntity.ok("Mess Created and Admin register succesfully");
     }
 
+   
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequestDto loginRequest) {
         Member user = memberRepository.findByEmail(loginRequest.getEmail())

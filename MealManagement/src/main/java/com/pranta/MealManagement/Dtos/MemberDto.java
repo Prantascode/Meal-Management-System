@@ -6,6 +6,7 @@ import com.pranta.MealManagement.Entity.Member;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -22,6 +23,8 @@ public class MemberDto {
     @NotBlank(message = "Invalid email formate")
     private String email;
 
+    @Size(min = 6, message = "Password must be at least 6 characters")
+    private String password;
     //@NotBlank(message = "Phone number is required")
     private String phone;
 
@@ -29,4 +32,6 @@ public class MemberDto {
     private Member.Role role;
 
     private boolean active = true;
+
+    private String messName;
 }

@@ -1,11 +1,14 @@
 package com.pranta.MealManagement.Controller;
 
+
+import java.security.Principal;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,6 +19,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.pranta.MealManagement.Dtos.MemberDto;
+import com.pranta.MealManagement.Entity.Member;
+import com.pranta.MealManagement.Repository.MemberRepository;
 import com.pranta.MealManagement.Service.MemberService;
 
 import jakarta.validation.Valid;
@@ -30,13 +35,25 @@ public class MemberController {
     
     @Autowired
     private MemberService memberService;
+    @Autowired
+    private MemberRepository memberRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @PostMapping("/register")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<MemberDto> registerMember(@Valid @RequestBody MemberDto memberDto){
+    public ResponseEntity<MemberDto> registerMember(@Valid @RequestBody MemberDto memberDto, Principal principal){
         try{
-            MemberDto registerMember = memberService.registerMember(memberDto);
-            return ResponseEntity.status(HttpStatus.CREATED).body(registerMember);
+            Member admin = memberRepository.findByEmail(principal.getName())
+                .orElseThrow(() -> new RuntimeException("Admin not found"));
+            
+                 memberDto.setPassword(passwordEncoder.encode(memberDto.getPassword()));
+
+            // Register member with admin's mess
+            MemberDto newMember = memberService.registerMember(memberDto, admin.getMess().getId());
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(newMember);
         }catch(RuntimeException e){
             return ResponseEntity.badRequest().build();
         }
