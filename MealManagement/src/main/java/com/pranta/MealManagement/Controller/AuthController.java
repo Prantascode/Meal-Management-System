@@ -4,7 +4,6 @@ package com.pranta.MealManagement.Controller;
 import com.pranta.MealManagement.Dtos.AdminRegisterDto;
 import com.pranta.MealManagement.Dtos.LoginRequestDto;
 import com.pranta.MealManagement.Dtos.RefreshTokenRequest;
-import com.pranta.MealManagement.Dtos.RegisterDto;
 import com.pranta.MealManagement.Entity.Member;
 import com.pranta.MealManagement.Entity.Mess;
 import com.pranta.MealManagement.Entity.RefreshToken;

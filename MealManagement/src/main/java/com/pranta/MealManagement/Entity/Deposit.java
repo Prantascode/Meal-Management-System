@@ -44,5 +44,11 @@ public class Deposit {
     @Column(name = "deposit_date")
     private LocalDateTime depositDate;
     
-    private String discription;
+    private String description;
+    public Deposit(Member member,BigDecimal amount,String description){
+        this.member = member;
+        this.amount = amount;
+        this.description = description;
+        this.depositDate = LocalDateTime.now();
+    }
 }

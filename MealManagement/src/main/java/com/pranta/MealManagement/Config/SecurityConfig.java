@@ -1,4 +1,4 @@
-package com.pranta.MealManagement.Config;
+  package com.pranta.MealManagement.Config;
 
 import com.pranta.MealManagement.Security.JwtFilter;
 import lombok.RequiredArgsConstructor;

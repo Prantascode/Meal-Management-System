@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.pranta.MealManagement.Dtos.DepositDto;
-import com.pranta.MealManagement.Entity.Deposit;
 import com.pranta.MealManagement.Service.DepositService;
 
 @RestController
@@ -21,13 +20,13 @@ import com.pranta.MealManagement.Service.DepositService;
 public class DepositController {
     
     @Autowired
-    public DepositService depositService;
+    private DepositService depositService;
 
     @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
     @PostMapping("/add")
-    public ResponseEntity<Deposit> addDeposit(@RequestBody DepositDto dto){
+    public ResponseEntity<DepositDto> addDeposit(@RequestBody DepositDto dto){
         try{
-            Deposit deposit = depositService.addDeposit(dto.getMemberId(), dto.getAmount(), dto.getDescription());
+            DepositDto deposit = depositService.addDeposit(dto.getMemberId(), dto.getAmount(), dto.getDescription());
             return ResponseEntity.status(HttpStatus.CREATED).body(deposit);
         }catch (RuntimeException e){
             return ResponseEntity.notFound().build();
