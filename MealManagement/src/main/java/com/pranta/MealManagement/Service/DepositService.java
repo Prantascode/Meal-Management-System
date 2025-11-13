@@ -53,6 +53,14 @@ public class DepositService {
         return total != null ? total : BigDecimal.ZERO;
     }
 
+    public List<DepositDto> getDepositsByDateRange(LocalDateTime startDate,LocalDateTime endDate){
+
+        List<Deposit> deposits= depositRepository.findByDepositDateBetweenOrderByDepositDateDesc(startDate, endDate);
+        return deposits.stream()
+                .map(this::convertToDto)
+                .toList();
+    }
+
     private DepositDto convertToDto(Deposit deposit){
         DepositDto dto = new DepositDto();
         dto.setMemberId(deposit.getMember().getId());
