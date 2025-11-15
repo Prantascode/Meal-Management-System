@@ -55,4 +55,10 @@ public class MonthlyReport {
 
     @Column(name = "generated_date")
     private LocalDate generatedDate = LocalDate.now();
+
+    public MonthlyReport(Member member, int month, int year) {
+        this.member = member;
+        this.month = month;
+        this.year = year;
+    }
 }

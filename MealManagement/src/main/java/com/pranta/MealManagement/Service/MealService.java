@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import com.pranta.MealManagement.Dtos.ExpenseDto;
 import com.pranta.MealManagement.Dtos.MealEntryDto;
+import com.pranta.MealManagement.Dtos.MemberDto;
 import com.pranta.MealManagement.Entity.Expense;
 import com.pranta.MealManagement.Entity.MealEntry;
 import com.pranta.MealManagement.Entity.Member;
@@ -57,6 +58,11 @@ public class MealService {
     }
     public Integer getTotalMealsByDateRange(LocalDate startDate,LocalDate endDate){
         Integer total = mealEntryRepository.getTotalMealsBetweenDates(startDate, endDate);
+        return total != null ? total : 0;
+    }
+
+    public Integer getTotalMealsByMemberAndDateRange(Long memberId,LocalDate starDate,LocalDate endDate){
+        Integer total = mealEntryRepository.getTotalMealsBetweenDates(starDate, endDate);
         return total != null ? total : 0;
     }
 

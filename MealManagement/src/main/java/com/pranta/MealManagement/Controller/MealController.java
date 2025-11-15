@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.pranta.MealManagement.Dtos.MealEntryDto;
+import com.pranta.MealManagement.Dtos.MemberDto;
 import com.pranta.MealManagement.Service.MealService;
 
 import jakarta.validation.Valid;
@@ -68,6 +69,15 @@ public class MealController {
             Integer totalMeals = mealService.getTotalMealsByDateRange(startDate, endDate);
             return ResponseEntity.ok(totalMeals);
     }
+
+    @GetMapping("/total/{memberId}")
+    public ResponseEntity<Integer> getTotalMealEntriesByMemberAndDateRange(@PathVariable Long memberId,
+        @RequestParam @DateTimeFormat(iso =  DateTimeFormat.ISO.DATE) LocalDate startDate,
+        @RequestParam @DateTimeFormat(iso =  DateTimeFormat.ISO.DATE) LocalDate endDate){
+            Integer totalMeals = mealService.getTotalMealsByMemberAndDateRange(memberId, startDate, endDate);
+            return ResponseEntity.ok(totalMeals);
+    }
+
     @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
     @PutMapping("/{id}")
     public ResponseEntity<MealEntryDto> updateMealEntry(@PathVariable Long id, @Valid @RequestBody MealEntryDto mealEntryDto){

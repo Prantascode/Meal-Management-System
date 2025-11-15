@@ -53,8 +53,8 @@ public class DepositController {
 
     @GetMapping("/total/{memberId}/range")
     public ResponseEntity<BigDecimal> findTotalDepositByMemberAndDateRange(@PathVariable Long memberId,
-        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE.TIME)LocalDateTime startDate,
-        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE.TIME)LocalDateTime endDate){
+        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)LocalDateTime startDate,
+        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)LocalDateTime endDate){
 
         BigDecimal totalDeposit = depositService.getDepositByMemberAndDateRange(memberId, startDate, endDate);
         return ResponseEntity.ok(totalDeposit);
