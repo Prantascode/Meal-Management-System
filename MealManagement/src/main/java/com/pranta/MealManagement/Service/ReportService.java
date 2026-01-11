@@ -96,4 +96,27 @@ public class ReportService {
 
         monthLyReportRepository.save(report);
     }
+
+
+    public List<MonthlyReportDto> getMonthlyReport(int month,int year){
+        List<MonthlyReport> reports = monthLyReportRepository.findByMonthAndYear(month, year);
+        return reports.stream()
+                .map(this :: convertToDto)
+                .toList();
+    }
+
+
+    private MonthlyReportDto convertToDto(MonthlyReport report){
+        MonthlyReportDto dto = new MonthlyReportDto();
+        dto.setMemberId(report.getMember().getId());
+        dto.setMemberName(report.getMember().getName());
+        dto.setMonth(report.getMonth());
+        dto.setYear(report.getYear());
+        dto.setTotalMeals(report.getTotalMeals());
+        dto.setTotalDeposite(report.getTotalDeposite());
+        dto.setTotalExpense(report.getTotalExpense());
+        dto.setBalance(report.getBalance());
+        dto.setPerMealCost(report.getPerMealCost());
+        return dto;
+    }
 }

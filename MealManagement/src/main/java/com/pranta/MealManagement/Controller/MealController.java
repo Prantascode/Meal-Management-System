@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.pranta.MealManagement.Dtos.MealEntryDto;
-import com.pranta.MealManagement.Dtos.MemberDto;
 import com.pranta.MealManagement.Service.MealService;
 
 import jakarta.validation.Valid;
