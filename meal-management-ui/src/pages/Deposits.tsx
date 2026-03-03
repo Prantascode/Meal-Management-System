@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api/axiosInstance';
 import { Landmark, Plus, History, Loader2, Search, Trash2, Edit3, Check, X, Wallet, AlertCircle } from 'lucide-react';
+import { AiInsights } from '../components/AiInsights'; 
 
 export const Deposits = () => {
   const [members, setMembers] = useState<any[]>([]);
   const [deposits, setDeposits] = useState<any[]>([]);
+  const [meals, setMeals] = useState<any[]>([]); // Added for AI
   const [isAdding, setIsAdding] = useState(false);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -13,7 +15,6 @@ export const Deposits = () => {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editFormData, setEditFormData] = useState<any>(null);
 
-  // Standardized Role Detection
   const userRole = (localStorage.getItem('role') || '').replace('ROLE_', '').toUpperCase();
   const isAdmin = userRole === 'ADMIN' || userRole === 'MANAGER';
 
@@ -24,14 +25,38 @@ export const Deposits = () => {
       const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
       const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString();
       
+      // We use separate try/catches or individual awaits to ensure 
+      // if one fails (like /meals), the others (members/deposits) still work.
       const [mRes, dRes] = await Promise.all([
         api.get('/members'),
         api.get(`/deposit/total/range?startDate=${firstDay}&endDate=${lastDay}`)
       ]);
+
       setMembers(mRes.data);
       setDeposits(Array.isArray(dRes.data) ? dRes.data : []);
+
+      // Try fetching meals separately so it doesn't break the page
+      try {
+       const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth();
+        
+        // Formats: YYYY-MM-DD
+        const firstDay = new Date(year, month, 1).toISOString().split('T')[0];
+        const lastDay = new Date(year, month + 1, 0).toISOString().split('T')[0];
+        
+        // 2. Format for LocalDateTime (Required by DepositController)
+        // This ensures the backend doesn't throw a 400 Bad Request
+        const startDateTime = `${firstDay}T00:00:00`;
+        const endDateTime = `${lastDay}T23:59:59`;
+        const mealRes = await api.get(`/meals?startDate=${firstDay}&endDate=${lastDay}`);
+        setMeals(mealRes.data || []);
+      } catch (mealErr) {
+        console.warn("Meal data could not be loaded for AI context", mealErr);
+      }
+
     } catch (err) {
-      console.error("Error loading data", err);
+      console.error("Error loading ledger data", err);
     } finally {
       setLoading(false);
     }
@@ -39,13 +64,14 @@ export const Deposits = () => {
 
   useEffect(() => { fetchData(); }, []);
 
+  // --- Logic Handlers (Delete, Edit, Update, Submit) ---
   const handleDelete = async (id: number) => {
     if (!window.confirm("Are you sure you want to delete this deposit?")) return;
     try {
       await api.delete(`/deposit/${id}`);
       setDeposits(prev => prev.filter(d => d.id !== id));
     } catch (err) {
-      alert("Delete failed. Check your permissions.");
+      alert("Delete failed.");
     }
   };
 
@@ -67,7 +93,6 @@ export const Deposits = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isAdmin) return;
-    
     try {
       await api.post('/deposit/add', {
         memberId: Number(formData.memberId),
@@ -82,6 +107,7 @@ export const Deposits = () => {
     }
   };
 
+  // --- Filtering Logic ---
   const filteredDeposits = deposits.filter(d => {
     const name = (d.memberName || '').toLowerCase();
     const note = (d.description || '').toLowerCase();
@@ -99,7 +125,7 @@ export const Deposits = () => {
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
-      {/* HEADER SECTION */}
+      {/* HEADER */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-2xl font-black flex items-center gap-3 text-slate-800">
@@ -114,7 +140,7 @@ export const Deposits = () => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <input 
               type="text"
-              placeholder="Filter by member or note..."
+              placeholder="Filter by member..."
               className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none bg-white transition-all shadow-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -133,6 +159,15 @@ export const Deposits = () => {
           )}
         </div>
       </div>
+
+      {/* AI INSIGHTS SECTION */}
+      {isAdmin && !isAdding && (
+        <AiInsights 
+          mealHistory={meals} 
+          deposits={deposits} 
+          members={members} 
+        />
+      )}
 
       {!isAdding && (
         <>

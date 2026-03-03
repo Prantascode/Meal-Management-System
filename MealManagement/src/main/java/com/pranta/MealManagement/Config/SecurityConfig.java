@@ -17,6 +17,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -33,6 +34,11 @@ public class SecurityConfig {
     private final JwtFilter jwtFilter;
 
     @Bean
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
+    }
+
+    @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
@@ -42,40 +48,28 @@ public class SecurityConfig {
         return config.getAuthenticationManager();
     }
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-            .cors(Customizer.withDefaults())
-            .csrf(AbstractHttpConfigurer::disable)
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                // 1. Public Access
-                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() 
-                .requestMatchers("/api/auth/**", "/api/member/login").permitAll() 
-                
-                // 2. Members Logic (Fixed Paths)
-                .requestMatchers(HttpMethod.GET, "/api/members/**").authenticated()
-                .requestMatchers(HttpMethod.POST, "/api/members/register").hasAnyAuthority("ADMIN", "ROLE_ADMIN")
-                .requestMatchers(HttpMethod.PUT, "/api/members/**").hasAnyAuthority("ADMIN", "MANAGER", "ROLE_ADMIN", "ROLE_MANAGER")
-                .requestMatchers(HttpMethod.DELETE, "/api/members/**").hasAnyAuthority("ADMIN", "ROLE_ADMIN")
-                
-                // 3. Deposits & Expenses (Matched path: /api/deposit)
-                .requestMatchers(HttpMethod.GET, "/api/deposit/**", "/api/expenses/**").authenticated()
-                .requestMatchers(HttpMethod.POST, "/api/deposit/**", "/api/expenses/**").hasAnyAuthority("ADMIN", "MANAGER", "ROLE_ADMIN", "ROLE_MANAGER")
-                .requestMatchers(HttpMethod.PUT, "/api/deposit/**", "/api/expenses/**").hasAnyAuthority("ADMIN", "MANAGER", "ROLE_ADMIN", "ROLE_MANAGER")
-                .requestMatchers(HttpMethod.DELETE, "/api/deposit/**", "/api/expenses/**").hasAnyAuthority("ADMIN", "ROLE_ADMIN")
+   @Bean
+public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    http
+        .cors(Customizer.withDefaults())
+        .csrf(AbstractHttpConfigurer::disable)
+        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .authorizeHttpRequests(auth -> auth
+            // 1. Public Access
+            .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() 
+            .requestMatchers("/api/auth/**", "/api/member/login").permitAll() 
+            .requestMatchers("/api/ai/**").permitAll()
 
-                // 4. Reports & Meals
-                .requestMatchers(HttpMethod.GET, "/api/reports/**").authenticated()
-                .requestMatchers(HttpMethod.POST, "/api/reports/generate/**").hasAnyAuthority("ADMIN", "MANAGER", "ROLE_ADMIN", "ROLE_MANAGER")
-                .requestMatchers("/api/meals/**", "/api/dashboard/**").authenticated()
-                
-                .anyRequest().authenticated() 
-            )
-            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+            // 2. Dashboard Data Access (Allow both ADMIN and ROLE_ADMIN)
+            .requestMatchers("/api/meals/**", "/api/deposit/**", "/api/members/**", "/api/dashboard/**")
+                .hasAnyAuthority("ADMIN", "ROLE_ADMIN", "MANAGER", "ROLE_MANAGER")
+            
+            .anyRequest().authenticated() 
+        )
+        .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
-        return http.build();
-    }
+    return http.build();
+}
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {

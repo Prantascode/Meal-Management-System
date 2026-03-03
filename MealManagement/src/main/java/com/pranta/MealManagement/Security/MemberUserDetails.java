@@ -22,7 +22,12 @@ public class MemberUserDetails implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(member.getRole().name()));
+        String roleName = member.getRole().name(); // e.g., "ADMIN"
+        
+        return List.of(
+            new SimpleGrantedAuthority(roleName),            // Matches .hasAuthority("ADMIN")
+            new SimpleGrantedAuthority("ROLE_" + roleName)   // Matches .hasRole("ADMIN")
+        );
     }
 
     @Override

@@ -25,50 +25,36 @@ public class JwtFilter extends OncePerRequestFilter {
     private final CustomUserDetailsService userDetailsService;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) 
+            throws ServletException, IOException {
 
         final String authHeader = request.getHeader("Authorization");
         String email = null;
         String jwt = null;
 
-        // 1. Extract Token from Header
-        if (authHeader != null && authHeader.trim().startsWith("Bearer ")) {
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
             jwt = authHeader.substring(7);
             try {
                 email = jwtUtil.extractEmail(jwt);
             } catch (Exception e) {
-                log.error("JWT Extraction Error: {}", e.getMessage());
+                log.error("JWT Error: {}", e.getMessage());
             }
         }
 
-        // 2. Validate Token and Set Security Context
         if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
             if (jwtUtil.validateToken(jwt, userDetails)) {
-                
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(
-                                userDetails,
-                                null,
-                                userDetails.getAuthorities() 
-                        );
+                log.info("Authenticating: {} | Roles: {}", email, userDetails.getAuthorities());
+
+                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                        userDetails, null, userDetails.getAuthorities()
+                );
                 
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
                 SecurityContextHolder.getContext().setAuthentication(authToken);
-                
-                if (userDetails instanceof MemberUserDetails memberUser) {
-                    log.info("Authenticated User: {} | Mess ID: {} | Path: {}", 
-                             email, memberUser.getMessId(), request.getRequestURI());
-                }
-            } else {
-                log.warn("Invalid JWT for user: {}", email);
             }
         }
-
         filterChain.doFilter(request, response);
     }
 }

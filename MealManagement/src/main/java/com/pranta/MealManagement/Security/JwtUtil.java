@@ -4,6 +4,7 @@ import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
@@ -11,13 +12,13 @@ import java.util.Date;
 import java.util.function.Function;
 
 @Component
+@Slf4j
 public class JwtUtil {
 
     private final String SECRET_STRING = "ThisIsAReallyLongSuperSecretKeyForHS256JWT1234567890";
     private final SecretKey SECRET_KEY = Keys.hmacShaKeyFor(SECRET_STRING.getBytes(StandardCharsets.UTF_8));
     
     private final long accessTokenExpiration = 1000L * 60 * 60; // 1 hour
-    private final long refreshTokenExpiration = 1000L * 60 * 60 * 24 * 7; // 7 days
 
     public String generateAccessToken(String email, String role, Long messId) {
         return Jwts.builder()
@@ -30,22 +31,18 @@ public class JwtUtil {
                 .compact();
     }
 
-    public String generateRefreshToken(String email) {
-        return Jwts.builder()
-                .setSubject(email)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + refreshTokenExpiration))
-                .signWith(SECRET_KEY)
-                .compact();
-    }
-
-    // NEW: Helper to extract Mess ID from token
     public Long extractMessId(String token) {
-        return extractClaim(token, claims -> claims.get("messId", Long.class));
-    }
-
-    public String extractRole(String token) {
-        return extractClaim(token, claims -> claims.get("role", String.class));
+        try {
+            Claims claims = extractAllClaims(token);
+            Object messId = claims.get("messId");
+            if (messId instanceof Number) {
+                return ((Number) messId).longValue();
+            }
+            return null;
+        } catch (Exception e) {
+            log.error("Error extracting messId: {}", e.getMessage());
+            return null;
+        }
     }
 
     public String extractEmail(String token) {
@@ -70,15 +67,12 @@ public class JwtUtil {
             final String email = extractEmail(token);
             return (email.equals(userDetails.getUsername()) && !isTokenExpired(token));
         } catch (JwtException | IllegalArgumentException e) {
+            log.error("Token validation failed: {}", e.getMessage());
             return false;
         }
     }
 
-    public boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
-    }
-
-    public Date extractExpiration(String token) {
-        return extractClaim(token, Claims::getExpiration);
+    private boolean isTokenExpired(String token) {
+        return extractClaim(token, Claims::getExpiration).before(new Date());
     }
 }
