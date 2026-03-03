@@ -1,12 +1,13 @@
-  package com.pranta.MealManagement.Config;
-
+package com.pranta.MealManagement.Config;
 
 import com.pranta.MealManagement.Entity.Member;
 import com.pranta.MealManagement.Repository.MemberRepository;
+import com.pranta.MealManagement.Security.MemberUserDetails;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.stereotype.Service;
+
 
 @Service
 @RequiredArgsConstructor
@@ -17,13 +18,9 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("Member not found: " + email));
+            .orElseThrow(() -> new UsernameNotFoundException("Member not found: " + email));
 
-        return User.builder()
-                .username(member.getEmail())
-                .password(member.getPassword())
-                .roles(member.getRole().name()) // Spring Security needs roles as string
-                .build();
+        // Use our custom class instead of Spring's default User
+        return new MemberUserDetails(member);
     }
 }
-

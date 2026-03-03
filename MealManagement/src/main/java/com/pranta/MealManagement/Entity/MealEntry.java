@@ -42,6 +42,11 @@ public class MealEntry {
     @NotNull(message = "Meal Type is required")
     private MealType mealType;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "mess_id", nullable = false)
+    @NotNull(message = "Mess reference is required")
+    private Mess mess;
+
     @Column(name = "meal_count")
     private int mealCount = 1;
     public enum MealType{

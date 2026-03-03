@@ -34,4 +34,5 @@ public class MemberDto {
     private boolean active = true;
 
     private String messName;
+    private Long messId;
 }

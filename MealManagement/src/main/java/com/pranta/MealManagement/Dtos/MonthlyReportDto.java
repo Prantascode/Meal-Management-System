@@ -26,4 +26,6 @@ public class MonthlyReportDto {
     private BigDecimal Balance;
 
     private BigDecimal perMealCost;
+    
+    private Long messId;
 }

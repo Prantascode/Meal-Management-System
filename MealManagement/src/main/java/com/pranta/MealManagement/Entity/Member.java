@@ -49,7 +49,7 @@ public class Member {
     private String phone;
 
     @Enumerated(EnumType.STRING)
-    private Role role = Role.MEMBER;
+    private Role role;
 
     @Column(name = "join_date")
     private LocalDateTime joinDate = LocalDateTime.now();

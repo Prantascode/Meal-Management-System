@@ -1,6 +1,5 @@
 package com.pranta.MealManagement.Controller;
 
-
 import com.pranta.MealManagement.Dtos.AdminRegisterDto;
 import com.pranta.MealManagement.Dtos.LoginRequestDto;
 import com.pranta.MealManagement.Dtos.RefreshTokenRequest;
@@ -14,13 +13,13 @@ import com.pranta.MealManagement.Security.JwtUtil;
 import com.pranta.MealManagement.Service.RefreshTokenService;
 import lombok.RequiredArgsConstructor;
 
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
+@CrossOrigin(origins = "http://localhost:5173")
 @RequiredArgsConstructor
 public class AuthController {
 
@@ -28,32 +27,30 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final RefreshTokenService refreshTokenService;
-    private final MessRepository massRepository;
-
+    private final MessRepository messRepository; 
     @PostMapping("/register-admin")
-    public ResponseEntity<?> registerAdmin(@RequestBody AdminRegisterDto dto){
+    public ResponseEntity<?> registerAdmin(@RequestBody AdminRegisterDto dto) {
         if (memberRepository.existsByEmail(dto.getEmail())) {
             return ResponseEntity.badRequest().body("Email Already Exists");
         }
 
-        //Create new Mass
+        // 1. Create new Mess
         Mess mess = new Mess();
         mess.setMessName(dto.getMessName());
-        massRepository.save(mess);
+        messRepository.save(mess);
 
-        //Create new Admin
+        // 2. Create new Admin
         Member admin = new Member();
         admin.setName(dto.getName());
         admin.setEmail(dto.getEmail());
         admin.setPassword(passwordEncoder.encode(dto.getPassword()));
         admin.setRole(Role.ADMIN);
         admin.setMess(mess);
-
+        admin.setActive(true); 
         memberRepository.save(admin);
-        return ResponseEntity.ok("Mess Created and Admin register succesfully");
+        return ResponseEntity.ok("Mess Created and Admin registered successfully");
     }
 
-   
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequestDto loginRequest) {
         Member user = memberRepository.findByEmail(loginRequest.getEmail())
@@ -63,12 +60,18 @@ public class AuthController {
             throw new RuntimeException("Invalid credentials");
         }
 
-        String accessToken = jwtUtil.generateAccessToken(user.getEmail(), user.getRole().name());
+        String accessToken = jwtUtil.generateAccessToken(
+            user.getEmail(), 
+            user.getRole().name(), 
+            user.getMess().getId()
+        );
+        
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getEmail());
 
         return ResponseEntity.ok(new AuthResponse(
                 user.getEmail(),
                 user.getRole().name(),
+                user.getMess().getId(), 
                 accessToken,
                 refreshToken.getToken()
         ));
@@ -82,10 +85,17 @@ public class AuthController {
                 .map(refreshTokenService::verifyExpiration)
                 .map(RefreshToken::getMember)
                 .map(member -> {
-                    String accessToken = jwtUtil.generateAccessToken(member.getEmail(), member.getRole().name());
+                    
+                    String accessToken = jwtUtil.generateAccessToken(
+                        member.getEmail(), 
+                        member.getRole().name(), 
+                        member.getMess().getId()
+                    );
+                    
                     return ResponseEntity.ok(new AuthResponse(
                             member.getEmail(),
                             member.getRole().name(),
+                            member.getMess().getId(),
                             accessToken,
                             requestRefreshToken
                     ));
@@ -100,5 +110,5 @@ public class AuthController {
         return ResponseEntity.ok("Logout successful");
     }
 
-    record AuthResponse(String email, String role, String accessToken, String refreshToken) {}
+    record AuthResponse(String email, String role, Long messId, String accessToken, String refreshToken) {}
 }

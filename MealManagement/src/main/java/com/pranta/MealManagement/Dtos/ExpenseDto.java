@@ -34,5 +34,6 @@ public class ExpenseDto {
    @NotNull(message = "Added by member is required")
     private Long addedById;
     private String addedByName;
+    private Long messId;
 
 }

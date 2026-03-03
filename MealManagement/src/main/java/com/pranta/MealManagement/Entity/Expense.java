@@ -54,6 +54,10 @@ public class Expense {
     @JoinColumn(name = "added_by",nullable = false)
     private Member addedBy;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "mess_id", nullable = false)
+    @NotNull(message = "Mess reference is required")
+    private Mess mess;
     
     public enum ExpenseCategory{
         MEAT, VEGETABLES, OTHER

@@ -11,17 +11,21 @@ import org.springframework.stereotype.Repository;
 
 import com.pranta.MealManagement.Entity.Deposit;
 import com.pranta.MealManagement.Entity.Member;
+import com.pranta.MealManagement.Entity.Mess;
 
 @Repository
 public interface DepositRepository extends JpaRepository<Deposit, Long> {
-    List<Deposit> findByMemberOrderByDepositDateDesc(Member member);
     
-    @Query("SELECT SUM(d.amount) FROM Deposit d WHERE d.member = :member AND " +
+    List<Deposit> findByMemberAndMessOrderByDepositDateDesc(Member member, Mess mess);
+    
+    @Query("SELECT SUM(d.amount) FROM Deposit d WHERE d.member = :member AND d.mess = :mess AND " +
            "d.depositDate BETWEEN :startDate AND :endDate")
-    BigDecimal getTotalDepositsByMemberBetweenDates(@Param("member") Member member,
-                                                   @Param("startDate") LocalDateTime startDate, 
-                                                   @Param("endDate") LocalDateTime endDate);
+    BigDecimal getTotalDepositsByMemberAndMessBetweenDates(@Param("member") Member member,
+                                                           @Param("mess") Mess mess,
+                                                           @Param("startDate") LocalDateTime startDate, 
+                                                           @Param("endDate") LocalDateTime endDate);
     
-    List<Deposit> findByDepositDateBetweenOrderByDepositDateDesc(LocalDateTime startDate, 
-                                                               LocalDateTime endDate);
+    List<Deposit> findByMessAndDepositDateBetweenOrderByDepositDateDesc(Mess mess,
+                                                                        LocalDateTime startDate, 
+                                                                        LocalDateTime endDate);
 }

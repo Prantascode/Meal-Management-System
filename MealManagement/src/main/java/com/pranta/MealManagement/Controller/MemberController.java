@@ -30,66 +30,71 @@ import org.springframework.web.bind.annotation.PutMapping;
 
 @RestController
 @RequestMapping("/api/members")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "http://localhost:5173")
 public class MemberController {
     
     @Autowired
     private MemberService memberService;
     @Autowired
     private MemberRepository memberRepository;
-
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    private Long getMessIdFromPrincipal(Principal principal) {
+        if (principal == null) throw new RuntimeException("Unauthorized");
+        Member user = memberRepository.findByEmail(principal.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return user.getMess().getId();
+    }
+
     @PostMapping("/register")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<MemberDto> registerMember(@Valid @RequestBody MemberDto memberDto, Principal principal){
-        try{
-            Member admin = memberRepository.findByEmail(principal.getName())
-                .orElseThrow(() -> new RuntimeException("Admin not found"));
-            
-                 memberDto.setPassword(passwordEncoder.encode(memberDto.getPassword()));
-
-            // Register member with admin's mess
-            MemberDto newMember = memberService.registerMember(memberDto, admin.getMess().getId());
-
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<MemberDto> registerMember(@Valid @RequestBody MemberDto memberDto, Principal principal) {
+        try {
+            Long messId = getMessIdFromPrincipal(principal);
+            memberDto.setPassword(passwordEncoder.encode(memberDto.getPassword()));
+            MemberDto newMember = memberService.registerMember(memberDto, messId);
             return ResponseEntity.status(HttpStatus.CREATED).body(newMember);
-        }catch(RuntimeException e){
+        } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
     }
 
     @GetMapping
-    public ResponseEntity<List<MemberDto>> getAllActiveMembers(){
-        List<MemberDto> members = memberService.getAllActiveMembers();
+    public ResponseEntity<List<MemberDto>> getAllActiveMembers(Principal principal) {
+        Long messId = getMessIdFromPrincipal(principal);
+        List<MemberDto> members = memberService.getActiveMembersByMess(messId);
         return ResponseEntity.ok(members);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<MemberDto> getMemberById(@PathVariable Long id){
-        return memberService.getMemberById(id)
-                .map(member -> ResponseEntity.ok(member))
+    public ResponseEntity<MemberDto> getMemberById(@PathVariable Long id, Principal principal) {
+        Long messId = getMessIdFromPrincipal(principal);
+        return memberService.getMemberByIdAndMess(id, messId)
+                .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'ROLE_ADMIN')")
     @PutMapping("/{id}")
-    public ResponseEntity<MemberDto> updateMember(@PathVariable Long id,@Valid @RequestBody MemberDto memberDto) {
-        try{
-            MemberDto updatetdMember = memberService.updateMember(id, memberDto);
-            return ResponseEntity.ok(updatetdMember);
-        }catch(RuntimeException e){
+    public ResponseEntity<MemberDto> updateMember(@PathVariable Long id, @Valid @RequestBody MemberDto memberDto, Principal principal) {
+        try {
+            Long messId = getMessIdFromPrincipal(principal);
+            MemberDto updatedMember = memberService.updateMember(id, memberDto, messId);
+            return ResponseEntity.ok(updatedMember);
+        } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
     }
 
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('MANAGER')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deactivateMember(@PathVariable Long id){
-        try{
-            memberService.deactivateMember(id);
+    public ResponseEntity<Void> deactivateMember(@PathVariable Long id, Principal principal) {
+        try {
+            Long messId = getMessIdFromPrincipal(principal);
+            memberService.deactivateMember(id, messId);
             return ResponseEntity.ok().build();
-        }catch(RuntimeException e){
+        } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
     }

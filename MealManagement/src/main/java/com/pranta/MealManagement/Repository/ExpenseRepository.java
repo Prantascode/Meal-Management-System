@@ -10,14 +10,19 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.pranta.MealManagement.Entity.Expense;
+import com.pranta.MealManagement.Entity.Mess;
 
 @Repository
 public interface ExpenseRepository extends JpaRepository<Expense, Long> {
-    List<Expense> findByDateBetweenOrderByDateDesc(LocalDate startDate, LocalDate endDate);
     
-    @Query("SELECT SUM(e.amount) FROM Expense e WHERE e.date BETWEEN :startDate AND :endDate")
-    BigDecimal getTotalExpensesBetweenDates(@Param("startDate") LocalDate startDate, 
-                                          @Param("endDate") LocalDate endDate);
+    List<Expense> findByMessAndDateBetweenOrderByDateDesc(Mess mess, LocalDate startDate, LocalDate endDate);
     
-    List<Expense> findByCategory(Expense.ExpenseCategory category);
+    @Query("SELECT SUM(e.amount) FROM Expense e WHERE e.mess = :mess AND e.date BETWEEN :startDate AND :endDate")
+    BigDecimal getTotalExpensesByMessBetweenDates(
+        @Param("mess") Mess mess, 
+        @Param("startDate") LocalDate startDate, 
+        @Param("endDate") LocalDate endDate
+    );
+    
+    List<Expense> findByMessAndCategory(Mess mess, Expense.ExpenseCategory category);
 }

@@ -1,87 +1,84 @@
 package com.pranta.MealManagement.Security;
 
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
+import io.jsonwebtoken.security.Keys;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.function.Function;
 
 @Component
 public class JwtUtil {
 
-    private final String secret = "ThisIsAReallyLongSuperSecretKeyForHS256JWT1234567890";
+    private final String SECRET_STRING = "ThisIsAReallyLongSuperSecretKeyForHS256JWT1234567890";
+    private final SecretKey SECRET_KEY = Keys.hmacShaKeyFor(SECRET_STRING.getBytes(StandardCharsets.UTF_8));
+    
     private final long accessTokenExpiration = 1000L * 60 * 60; // 1 hour
     private final long refreshTokenExpiration = 1000L * 60 * 60 * 24 * 7; // 7 days
 
-    // Generate Access Token
-    public String generateAccessToken(String email, String role) {
-        return generateToken(email, role, accessTokenExpiration);
-    }
-
-    // Generate Refresh Token
-    public String generateRefreshToken(String email) {
-        return generateToken(email, "REFRESH", refreshTokenExpiration);
-    }
-
-    private String generateToken(String email, String role, long expiration) {
+    public String generateAccessToken(String email, String role, Long messId) {
         return Jwts.builder()
                 .setSubject(email)
-                .claim("role", role)
+                .claim("role", role) 
+                .claim("messId", messId) 
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + expiration))
-                .signWith(SignatureAlgorithm.HS256, secret)
+                .setExpiration(new Date(System.currentTimeMillis() + accessTokenExpiration))
+                .signWith(SECRET_KEY)
                 .compact();
     }
 
-    // Extract email from token
-    public String extractEmail(String token) {
-        return Jwts.parser()
-                .setSigningKey(secret)
-                .parseClaimsJws(token)
-                .getBody()
-                .getSubject();
+    public String generateRefreshToken(String email) {
+        return Jwts.builder()
+                .setSubject(email)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + refreshTokenExpiration))
+                .signWith(SECRET_KEY)
+                .compact();
     }
 
-    // Extract role from token
+    // NEW: Helper to extract Mess ID from token
+    public Long extractMessId(String token) {
+        return extractClaim(token, claims -> claims.get("messId", Long.class));
+    }
+
     public String extractRole(String token) {
-        return (String) Jwts.parser()
-                .setSigningKey(secret)
-                .parseClaimsJws(token)
-                .getBody()
-                .get("role");
+        return extractClaim(token, claims -> claims.get("role", String.class));
     }
 
-    // Validate token
+    public String extractEmail(String token) {
+        return extractClaim(token, Claims::getSubject);
+    }
+
+    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+        final Claims claims = extractAllClaims(token);
+        return claimsResolver.apply(claims);
+    }
+
+    private Claims extractAllClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(SECRET_KEY)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+    }
+
     public boolean validateToken(String token, UserDetails userDetails) {
         try {
             final String email = extractEmail(token);
             return (email.equals(userDetails.getUsername()) && !isTokenExpired(token));
-        } catch (Exception e) {
+        } catch (JwtException | IllegalArgumentException e) {
             return false;
         }
     }
 
-    // Check expiration
     public boolean isTokenExpired(String token) {
-        try {
-            return Jwts.parser()
-                    .setSigningKey(secret)
-                    .parseClaimsJws(token)
-                    .getBody()
-                    .getExpiration()
-                    .before(new Date());
-        } catch (Exception e) {
-            return true;
-        }
+        return extractExpiration(token).before(new Date());
     }
 
-    // Extract expiration date
     public Date extractExpiration(String token) {
-        return Jwts.parser()
-                .setSigningKey(secret)
-                .parseClaimsJws(token)
-                .getBody()
-                .getExpiration();
+        return extractClaim(token, Claims::getExpiration);
     }
 }

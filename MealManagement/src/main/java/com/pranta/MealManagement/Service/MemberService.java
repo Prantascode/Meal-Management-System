@@ -22,8 +22,7 @@ public class MemberService {
     @Autowired
     private MessRepository messRepository;
 
-    public MemberDto registerMember(MemberDto memberDto, Long  messId){
-
+    public MemberDto registerMember(MemberDto memberDto, Long messId){
         if (memberRepository.existsByEmail(memberDto.getEmail())) {
             throw new RuntimeException("Member with this email already exists");
         }
@@ -32,26 +31,41 @@ public class MemberService {
                 .orElseThrow(() -> new RuntimeException("Mess not found"));
 
         Member member = convertToEntity(memberDto);
-        member.setMess(mess);
+        member.setMess(mess); 
         
         Member savedMember = memberRepository.save(member);
         return convertToDto(savedMember);
     }
 
-    public List<MemberDto> getAllActiveMembers(){
-        return memberRepository.findActiveMembers()
+    public List<MemberDto> getActiveMembersByMess(Long messId){
+        Mess mess = messRepository.findById(messId)
+                .orElseThrow(() -> new RuntimeException("Mess not found"));
+
+        return memberRepository.findActiveMembersByMess(mess)
             .stream()
             .map(this::convertToDto)
             .collect(Collectors.toList());
     }
 
-    public Optional<MemberDto> getMemberById(Long id){
-        return memberRepository.findById(id)
+    public Optional<MemberDto> getMemberByIdAndMess(Long id, Long messId){
+        Mess mess = messRepository.findById(messId)
+                .orElseThrow(() -> new RuntimeException("Mess not found"));
+
+        return memberRepository.findByIdAndMess(id, mess)
                 .map(this::convertToDto);
     }
-    public MemberDto updateMember(Long id, MemberDto memberDto){
-        Member member = memberRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Member Not found"));
+
+    public MemberDto updateMember(Long id, MemberDto memberDto, Long messId) {
+        Mess mess = messRepository.findById(messId)
+                .orElseThrow(() -> new RuntimeException("Mess not found"));
+
+        Member member = memberRepository.findByIdAndMess(id, mess)
+                .orElseThrow(() -> new RuntimeException("Member not found in your mess"));
+
+        if (!member.getEmail().equals(memberDto.getEmail()) && 
+            memberRepository.existsByEmail(memberDto.getEmail())) {
+            throw new RuntimeException("Email already in use by another member");
+        }
 
         member.setName(memberDto.getName());
         member.setEmail(memberDto.getEmail());
@@ -59,13 +73,17 @@ public class MemberService {
         member.setRole(memberDto.getRole());
         member.setActive(memberDto.isActive());
 
-        Member updateMember = memberRepository.save(member);
-        return convertToDto(updateMember);
+        Member updatedMember = memberRepository.save(member);
+        return convertToDto(updatedMember);
     }
 
-    public void deactivateMember(Long id){
-        Member member = memberRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Member Not Found"));
+    public void deactivateMember(Long id, Long messId){
+        Mess mess = messRepository.findById(messId)
+                .orElseThrow(() -> new RuntimeException("Mess not found"));
+
+        Member member = memberRepository.findByIdAndMess(id, mess)
+            .orElseThrow(() -> new RuntimeException("Member Not Found in your mess"));
+            
         member.setActive(false);
         memberRepository.save(member);  
     }
@@ -78,9 +96,11 @@ public class MemberService {
         memberDto.setPhone(member.getPhone());
         memberDto.setRole(member.getRole());
         memberDto.setActive(member.isActive());
-        memberDto.setMessName(member.getMess() != null ? member.getMess().getMessName() :null);
+        memberDto.setMessId(member.getMess() != null ? member.getMess().getId() : null); 
+        memberDto.setMessName(member.getMess() != null ? member.getMess().getMessName() : null);
         return memberDto;
     }
+
     private Member convertToEntity(MemberDto dto){
         Member member = new Member();
         member.setName(dto.getName());
@@ -88,7 +108,7 @@ public class MemberService {
         member.setPhone(dto.getPhone());
         member.setRole(dto.getRole() != null ? dto.getRole() : Member.Role.MEMBER);
         member.setActive(dto.isActive());
-       member.setPassword(dto.getPassword());
+        member.setPassword(dto.getPassword());
         return member;
     }
 }

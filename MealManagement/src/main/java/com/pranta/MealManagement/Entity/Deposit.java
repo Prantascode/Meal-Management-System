@@ -43,12 +43,18 @@ public class Deposit {
 
     @Column(name = "deposit_date")
     private LocalDateTime depositDate;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "mess_id", nullable = false)
+    @NotNull(message = "Mess reference is required")
+    private Mess mess;
     
     private String description;
-    public Deposit(Member member,BigDecimal amount,String description){
+    public Deposit(Member member,BigDecimal amount,String description,Mess mess){
         this.member = member;
         this.amount = amount;
         this.description = description;
         this.depositDate = LocalDateTime.now();
+        this.mess = mess;
     }
 }

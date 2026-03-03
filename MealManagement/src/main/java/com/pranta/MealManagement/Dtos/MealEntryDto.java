@@ -30,4 +30,6 @@ public class MealEntryDto {
     
     @Min(value = 1,message = "meal count must be at least 1")
     private int mealCount = 1;
+
+    private Long messId;
 }
