@@ -38,7 +38,6 @@ export const AiInsights = ({ mealHistory, deposits, members }: Props) => {
     }
   };
 
-  // Modern way to define Markdown components to satisfy TypeScript
   const MarkdownComponents: Components = {
     h3: ({ children }) => (
       <h3 className="text-lg font-bold text-amber-400 mt-4 mb-2">{children}</h3>

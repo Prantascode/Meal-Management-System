@@ -6,7 +6,7 @@ import { AiInsights } from '../components/AiInsights';
 export const Deposits = () => {
   const [members, setMembers] = useState<any[]>([]);
   const [deposits, setDeposits] = useState<any[]>([]);
-  const [meals, setMeals] = useState<any[]>([]); // Added for AI
+  const [meals, setMeals] = useState<any[]>([]); 
   const [isAdding, setIsAdding] = useState(false);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -25,8 +25,6 @@ export const Deposits = () => {
       const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
       const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString();
       
-      // We use separate try/catches or individual awaits to ensure 
-      // if one fails (like /meals), the others (members/deposits) still work.
       const [mRes, dRes] = await Promise.all([
         api.get('/members'),
         api.get(`/deposit/total/range?startDate=${firstDay}&endDate=${lastDay}`)
@@ -41,12 +39,9 @@ export const Deposits = () => {
         const year = now.getFullYear();
         const month = now.getMonth();
         
-        // Formats: YYYY-MM-DD
         const firstDay = new Date(year, month, 1).toISOString().split('T')[0];
         const lastDay = new Date(year, month + 1, 0).toISOString().split('T')[0];
         
-        // 2. Format for LocalDateTime (Required by DepositController)
-        // This ensures the backend doesn't throw a 400 Bad Request
         const startDateTime = `${firstDay}T00:00:00`;
         const endDateTime = `${lastDay}T23:59:59`;
         const mealRes = await api.get(`/meals?startDate=${firstDay}&endDate=${lastDay}`);
@@ -64,7 +59,6 @@ export const Deposits = () => {
 
   useEffect(() => { fetchData(); }, []);
 
-  // --- Logic Handlers (Delete, Edit, Update, Submit) ---
   const handleDelete = async (id: number) => {
     if (!window.confirm("Are you sure you want to delete this deposit?")) return;
     try {
