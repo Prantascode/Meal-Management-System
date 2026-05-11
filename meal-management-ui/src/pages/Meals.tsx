@@ -150,22 +150,214 @@ export const Meals = () => {
                 <div className="p-2 bg-blue-100 rounded-lg text-blue-600"><UtensilsCrossed size={20} /></div>
                 <h2 className="text-xl font-bold text-gray-800">Add Meal</h2>
               </div>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <select className="w-full border-gray-200 border p-3 rounded-xl bg-gray-50 focus:bg-white outline-none" value={mealData.memberId} onChange={e => setMealData({...mealData, memberId: e.target.value})}>
-                  <option value="">Select Member</option>
-                  {members.map((m: any) => <option key={m.id} value={m.id}>{m.name}</option>)}
-                </select>
-                <input type="date" className="w-full border-gray-200 border p-3 rounded-xl bg-gray-50" value={mealData.date} onChange={e => setMealData({...mealData, date: e.target.value})} />
-                <div className="flex gap-2">
-                  <select className="flex-1 border-gray-200 border p-3 rounded-xl bg-gray-50" value={mealData.mealType} onChange={e => setMealData({...mealData, mealType: e.target.value})}>
-                    <option value="BREAKFAST">Breakfast</option>
-                    <option value="LUNCH">Lunch</option>
-                    <option value="DINNER">Dinner</option>
-                  </select>
-                  <input type="number" className="w-20 border-gray-200 border p-3 rounded-xl bg-gray-50 text-center" value={mealData.mealCount} onChange={e => setMealData({...mealData, mealCount: parseInt(e.target.value)})}/>
+              <form onSubmit={handleSubmit} className="space-y-5">
+
+                {/* Select Member */}
+                <div className="space-y-2">
+                  <label className="text-xs font-black text-gray-500 uppercase tracking-widest">
+                    Select Member
+                  </label>
+
+                  <div className="relative group">
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-600 transition-colors">
+                      <User size={18} />
+                    </div>
+
+                    <select
+                      className="
+                        w-full appearance-none
+                        border border-gray-200
+                        bg-gradient-to-r from-gray-50 to-white
+                        pl-12 pr-10 py-3.5
+                        rounded-2xl
+                        text-sm font-bold text-gray-700
+                        shadow-sm
+                        outline-none
+                        cursor-pointer
+                        transition-all duration-200
+                        hover:border-blue-300 hover:shadow-md
+                        focus:border-blue-500 focus:ring-4 focus:ring-blue-100 focus:bg-white
+                      "
+                      value={mealData.memberId}
+                      onChange={e => setMealData({ ...mealData, memberId: e.target.value })}
+                    >
+                      <option value="">Choose a member</option>
+                      {members.map((m: any) => (
+                        <option key={m.id} value={m.id}>
+                          {m.name}
+                        </option>
+                      ))}
+                    </select>
+
+                    <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs">
+                      ▼
+                    </div>
+                  </div>
                 </div>
-                <button disabled={submitting} className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-xl font-black transition-all flex items-center justify-center">
-                  {submitting ? <Loader2 className="animate-spin" size={20} /> : 'Save Record'}
+
+                {/* Date */}
+                <div className="space-y-2">
+                  <label className="text-xs font-black text-gray-500 uppercase tracking-widest">
+                    Meal Date
+                  </label>
+
+                  <div className="relative group">
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-600 transition-colors">
+                      <CalendarDays size={18} />
+                    </div>
+
+                    <input
+                      type="date"
+                      className="
+                        w-full
+                        border border-gray-200
+                        bg-gradient-to-r from-gray-50 to-white
+                        pl-12 pr-4 py-3.5
+                        rounded-2xl
+                        text-sm font-bold text-gray-700
+                        shadow-sm
+                        outline-none
+                        transition-all duration-200
+                        hover:border-blue-300 hover:shadow-md
+                        focus:border-blue-500 focus:ring-4 focus:ring-blue-100 focus:bg-white
+                      "
+                      value={mealData.date}
+                      onChange={e => setMealData({ ...mealData, date: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                {/* Meal Type */}
+                <div className="space-y-2">
+                  <label className="text-xs font-black text-gray-500 uppercase tracking-widest">
+                    Meal Type
+                  </label>
+
+                  <div className="grid grid-cols-3 gap-2">
+                    {['BREAKFAST', 'LUNCH', 'DINNER'].map((type) => (
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={() => setMealData({ ...mealData, mealType: type })}
+                        className={`
+                          py-3 rounded-2xl text-[11px] font-black uppercase transition-all duration-200 border
+                          ${
+                            mealData.mealType === type
+                              ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-200 scale-[1.02]'
+                              : 'bg-gray-50 text-gray-500 border-gray-200 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200'
+                          }
+                        `}
+                      >
+                        {type === 'BREAKFAST' ? 'Breakfast' : type === 'LUNCH' ? 'Lunch' : 'Dinner'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Meal Count */}
+                <div className="space-y-2">
+                  <label className="text-xs font-black text-gray-500 uppercase tracking-widest">
+                    Meal Count
+                  </label>
+
+                  <div className="flex items-center gap-3 bg-gradient-to-r from-gray-50 to-white border border-gray-200 rounded-2xl p-2 shadow-sm">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setMealData({
+                          ...mealData,
+                          mealCount: Math.max(1, mealData.mealCount - 1),
+                        })
+                      }
+                      className="w-11 h-11 rounded-xl bg-white border border-gray-200 text-gray-600 font-black text-xl hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all"
+                    >
+                      -
+                    </button>
+
+                    <input
+                      type="number"
+                      min="1"
+                      className="
+                        flex-1 bg-transparent text-center
+                        text-2xl font-black text-gray-800
+                        outline-none
+                      "
+                      value={mealData.mealCount}
+                      onChange={e =>
+                        setMealData({
+                          ...mealData,
+                          mealCount: Math.max(1, parseInt(e.target.value) || 1),
+                        })
+                      }
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setMealData({
+                          ...mealData,
+                          mealCount: mealData.mealCount + 1,
+                        })
+                      }
+                      className="w-11 h-11 rounded-xl bg-white border border-gray-200 text-gray-600 font-black text-xl hover:bg-green-50 hover:text-green-600 hover:border-green-200 transition-all"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                {/* Selected Value Preview */}
+                <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4">
+                  <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-2">
+                    Current Selection
+                  </p>
+
+                  <div className="flex flex-wrap gap-2">
+                    <span className="px-3 py-1 rounded-full bg-white text-blue-700 text-xs font-black border border-blue-100">
+                      {members.find((m: any) => String(m.id) === String(mealData.memberId))?.name || 'No member selected'}
+                    </span>
+
+                    <span className="px-3 py-1 rounded-full bg-white text-purple-700 text-xs font-black border border-purple-100">
+                      {mealData.mealType}
+                    </span>
+
+                    <span className="px-3 py-1 rounded-full bg-white text-emerald-700 text-xs font-black border border-emerald-100">
+                      {mealData.mealCount} Meal
+                    </span>
+                  </div>
+                </div>
+
+                {/* Save Button */}
+                <button
+                  disabled={submitting}
+                  className="
+                    w-full
+                    bg-gradient-to-r from-blue-600 to-indigo-600
+                    hover:from-blue-700 hover:to-indigo-700
+                    disabled:from-gray-400 disabled:to-gray-500
+                    text-white
+                    py-4
+                    rounded-2xl
+                    font-black
+                    tracking-wide
+                    shadow-lg shadow-blue-200
+                    hover:shadow-xl hover:shadow-blue-300
+                    active:scale-[0.98]
+                    transition-all duration-200
+                    flex items-center justify-center gap-2
+                  "
+                >
+                  {submitting ? (
+                    <>
+                      <Loader2 className="animate-spin" size={20} />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Check size={20} />
+                      Save Meal Record
+                    </>
+                  )}
                 </button>
               </form>
             </div>

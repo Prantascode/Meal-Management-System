@@ -62,7 +62,7 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
 
             // 2. Dashboard Data Access (Allow both ADMIN and ROLE_ADMIN)
             .requestMatchers("/api/meals/**", "/api/deposit/**", "/api/members/**", "/api/dashboard/**")
-                .hasAnyAuthority("ADMIN", "ROLE_ADMIN", "MANAGER", "ROLE_MANAGER")
+                .hasAnyAuthority("ADMIN", "ROLE_ADMIN", "MANAGER", "ROLE_MANAGER","MEMBER", "ROLE_MEMBER")
             
             .anyRequest().authenticated() 
         )

@@ -73,12 +73,12 @@ public class ReportService {
             reportDto.setTotalMeals(memberMeals != null ? memberMeals : 0);
 
             BigDecimal memberDeposits = depositService.getDepositByMemberAndMessAndDateRange(member.getId(), messId, startDateTime, endDateTime);
-            reportDto.setTotalDeposite(memberDeposits != null ? memberDeposits : BigDecimal.ZERO);
+            reportDto.setTotalDeposit(memberDeposits != null ? memberDeposits : BigDecimal.ZERO);
 
             BigDecimal memberExpense = perMealCost.multiply(BigDecimal.valueOf(reportDto.getTotalMeals()))
                                                   .setScale(2, RoundingMode.HALF_UP);
             reportDto.setTotalExpense(memberExpense);
-            reportDto.setBalance(reportDto.getTotalDeposite().subtract(memberExpense));
+            reportDto.setBalance(reportDto.getTotalDeposit().subtract(memberExpense));
 
             reports.add(reportDto);
 
@@ -94,7 +94,7 @@ public class ReportService {
 
         report.setMess(mess); 
         report.setTotalMeals(reportDto.getTotalMeals());
-        report.setTotalDeposite(reportDto.getTotalDeposite());
+        report.setTotalDeposit(reportDto.getTotalDeposit());
         report.setTotalExpense(reportDto.getTotalExpense());
         report.setBalance(reportDto.getBalance());
         report.setPerMealCost(reportDto.getPerMealCost());
@@ -120,7 +120,7 @@ public class ReportService {
         dto.setYear(report.getYear());
         dto.setMessId(report.getMess().getId());
         dto.setTotalMeals(report.getTotalMeals());
-        dto.setTotalDeposite(report.getTotalDeposite());
+        dto.setTotalDeposit(report.getTotalDeposit());
         dto.setTotalExpense(report.getTotalExpense());
         dto.setBalance(report.getBalance());
         dto.setPerMealCost(report.getPerMealCost());

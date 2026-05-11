@@ -7,28 +7,28 @@ import { Meals } from './pages/Meals';
 import { Deposits } from './pages/Deposits';
 import { Expenses } from './pages/Expenses';
 import { Reports } from './pages/Reports';
-import { Sidebar } from './components/Sidebar';
+import { Layout } from './components/Layout';
 
-const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode; allowedRoles?: string[] }) => {
+const ProtectedRoute = ({ 
+  children, 
+  allowedRoles 
+}: { 
+  children: React.ReactNode; 
+  allowedRoles?: string[] 
+}) => {
   const token = localStorage.getItem('accessToken');
   const rawRole = localStorage.getItem('role') || '';
-  const userRole = rawRole.replace('ROLE_', ''); 
+  const userRole = rawRole.replace('ROLE_', '').toUpperCase();
 
-  if (!token) return <Navigate to="/login" replace />;
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
 
-  // Logic: If allowedRoles is provided, userRole MUST be in that list
   if (allowedRoles && !allowedRoles.includes(userRole)) {
     return <Navigate to="/dashboard" replace />;
   }
 
-  return (
-    <div className="flex">
-      <Sidebar />
-      <main className="flex-1 bg-gray-50 min-h-screen">
-        {children}
-      </main>
-    </div>
-  );
+  return <>{children}</>;
 };
 
 function App() {
@@ -39,32 +39,62 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/create-mess" element={<CreateMess />} />
 
-        {/* --- ROUTES ACCESSIBLE BY EVERYONE (ADMIN, MANAGER, MEMBER) --- */}
-        
-        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-        
-        <Route path="/meals" element={<ProtectedRoute><Meals /></ProtectedRoute>} />
-        
-        <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
-        
-        {/* Added 'MEMBER' to allowedRoles so they can enter the page */}
-        <Route path="/members" element={
-          <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'MEMBER']}>
-            <Members />
-          </ProtectedRoute>
-        } />
-        
-        <Route path="/deposits" element={
-          <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'MEMBER']}>
-            <Deposits />
-          </ProtectedRoute>
-        } />
+        {/* Protected Layout Routes */}
+        <Route element={<Layout />}>
+          <Route 
+            path="/dashboard" 
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            } 
+          />
 
-        <Route path="/expenses" element={
-          <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'MEMBER']}>
-            <Expenses />
-          </ProtectedRoute>
-        } />
+          <Route 
+            path="/meals" 
+            element={
+              <ProtectedRoute>
+                <Meals />
+              </ProtectedRoute>
+            } 
+          />
+
+          <Route 
+            path="/reports" 
+            element={
+              <ProtectedRoute>
+                <Reports />
+              </ProtectedRoute>
+            } 
+          />
+
+          <Route 
+            path="/members" 
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'MEMBER']}>
+                <Members />
+              </ProtectedRoute>
+            } 
+          />
+
+          <Route 
+            path="/deposits" 
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'MEMBER']}>
+                <Deposits />
+              </ProtectedRoute>
+            } 
+          />
+
+          <Route 
+            path="/expenses" 
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'MEMBER']}>
+                <Expenses />
+              </ProtectedRoute>
+            } 
+          />
+        </Route>
 
         {/* Default Redirects */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
