@@ -25,6 +25,8 @@ export const Members = () => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showEditPassword, setShowEditPassword] = useState(false);
 
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
   const [newMember, setNewMember] = useState({
     name: '',
@@ -49,9 +51,7 @@ export const Members = () => {
 
   const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
 
-  const userRole = (localStorage.getItem('role') || '')
-    .replace('ROLE_', '')
-    .toUpperCase();
+  const userRole = currentUser?.role?.replace('ROLE_', '').toUpperCase() || '';
 
   const isAdmin = userRole === 'ADMIN';
   const isManager = userRole === 'MANAGER';
@@ -59,16 +59,30 @@ export const Members = () => {
 
   const canView = isAdmin || isManager || isMember;
   const canManage = isAdmin;
-
   useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const res = await api.get('/members/me');
+        setCurrentUser(res.data);
+      } catch (err) {
+        setError('Failed to load your profile. Please login again.');
+      } finally {
+        setProfileLoading(false);
+      }
+    };
+
+    fetchCurrentUser();
+  }, []);
+  useEffect(() => {
+    if (profileLoading) return;
+
     if (canView) {
       fetchMembers();
     } else {
       setLoading(false);
       setError('Access Denied');
     }
-  }, [canView]);
-
+  }, [profileLoading, canView]);
   const showNotification = (
     type: 'success' | 'error',
     title: string,
@@ -233,7 +247,7 @@ export const Members = () => {
     }
   };
 
-  if (loading) {
+  if (profileLoading || loading)  {
     return (
       <div className="flex h-screen items-center justify-center bg-slate-50">
         <Loader2 className="animate-spin text-indigo-600" size={48} />

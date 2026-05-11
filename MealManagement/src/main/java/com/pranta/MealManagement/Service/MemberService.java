@@ -4,10 +4,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.GetMapping;
 
 import com.pranta.MealManagement.Dtos.MemberDto;
+import com.pranta.MealManagement.Dtos.MyProfileDto;
 import com.pranta.MealManagement.Entity.Member;
 import com.pranta.MealManagement.Entity.Mess;
 import com.pranta.MealManagement.Repository.MemberRepository;
@@ -53,6 +57,21 @@ public class MemberService {
 
         return memberRepository.findByIdAndMess(id, mess)
                 .map(this::convertToDto);
+    }
+    public MyProfileDto getCurrentUser(String email) {
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return new MyProfileDto(
+                member.getId(),
+                member.getName(),
+                member.getEmail(),
+                member.getPhone(),
+                member.getRole(),
+                member.isActive(),
+                member.getMess() != null ? member.getMess().getMessName() : null,
+                member.getMess() != null ? member.getMess().getId() : null
+        );
     }
 
     public MemberDto updateMember(Long id, MemberDto memberDto, Long messId) {

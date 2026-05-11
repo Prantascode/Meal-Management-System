@@ -69,6 +69,7 @@ public class AuthController {
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getEmail());
 
         return ResponseEntity.ok(new AuthResponse(
+                user.getName(),
                 user.getEmail(),
                 user.getRole().name(),
                 user.getMess().getId(), 
@@ -93,6 +94,7 @@ public class AuthController {
                     );
                     
                     return ResponseEntity.ok(new AuthResponse(
+                            member.getName(),
                             member.getEmail(),
                             member.getRole().name(),
                             member.getMess().getId(),
@@ -110,5 +112,5 @@ public class AuthController {
         return ResponseEntity.ok("Logout successful");
     }
 
-    record AuthResponse(String email, String role, Long messId, String accessToken, String refreshToken) {}
+    record AuthResponse(String name,String email, String role, Long messId, String accessToken, String refreshToken) {}
 }

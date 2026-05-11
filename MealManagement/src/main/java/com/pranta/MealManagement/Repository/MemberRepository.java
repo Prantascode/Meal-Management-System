@@ -22,6 +22,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     List<Member> findActiveMembersByMess(@Param("mess") Mess mess);
     
     boolean existsByEmail(String email);
+
     
     Optional<Member> findByIdAndMess(Long id, Mess mess);
 }
