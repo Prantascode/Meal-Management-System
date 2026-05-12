@@ -21,6 +21,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.pranta.MealManagement.Dtos.MemberDto;
 import com.pranta.MealManagement.Dtos.MyProfileDto;
+import com.pranta.MealManagement.Dtos.UpdateMyProfileDto;
+import com.pranta.MealManagement.Dtos.UpdatePasswordDto;
 import com.pranta.MealManagement.Entity.Member;
 import com.pranta.MealManagement.Repository.MemberRepository;
 import com.pranta.MealManagement.Service.MemberService;
@@ -39,28 +41,43 @@ public class MemberController {
     private MemberService memberService;
     @Autowired
     private MemberRepository memberRepository;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
 
-    private Long getMessIdFromPrincipal(Principal principal) {
-        if (principal == null) throw new RuntimeException("Unauthorized");
+   private Long getMessIdFromPrincipal(Principal principal) {
+        if (principal == null) {
+            throw new RuntimeException("Unauthorized");
+        }
+
         Member user = memberRepository.findByEmail(principal.getName())
                 .orElseThrow(() -> new RuntimeException("User not found"));
+
         return user.getMess().getId();
     }
 
     @PostMapping("/register")
     @PreAuthorize("hasAuthority('ADMIN')")
-    public ResponseEntity<MemberDto> registerMember(@Valid @RequestBody MemberDto memberDto, Principal principal) {
+    public ResponseEntity<MemberDto> registerMember(
+            @Valid @RequestBody MemberDto memberDto,
+            Principal principal
+    ) {
         try {
             Long messId = getMessIdFromPrincipal(principal);
-            memberDto.setPassword(passwordEncoder.encode(memberDto.getPassword()));
-            MemberDto newMember = memberService.registerMember(memberDto, messId);
+
+            String adminEmail = principal.getName();
+
+            MemberDto newMember = memberService.registerMember(
+                    memberDto,
+                    messId,
+                    adminEmail
+            );
+
             return ResponseEntity.status(HttpStatus.CREATED).body(newMember);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+
+        } catch (RuntimeException e) {
+            return ResponseEntity
+                    .badRequest()
+                    .build();
         }
-    }
+}
 
     @GetMapping
     public ResponseEntity<List<MemberDto>> getAllActiveMembers(Principal principal) {
@@ -84,7 +101,52 @@ public class MemberController {
         return ResponseEntity.ok(memberService.getCurrentUser(email));
     }
 
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'ROLE_ADMIN')")
+    @PutMapping("/me")
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('MANAGER') or hasAuthority('MEMBER')")
+    public ResponseEntity<MyProfileDto> updateMyProfile(
+            @Valid @RequestBody UpdateMyProfileDto dto,
+            Principal principal
+    ) {
+        try {
+            if (principal == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
+            MyProfileDto updatedProfile = memberService.updateMyProfile(
+                    principal.getName(),
+                    dto
+            );
+
+            return ResponseEntity.ok(updatedProfile);
+
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @PutMapping("/me/password")
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('MANAGER') or hasAuthority('MEMBER')")
+    public ResponseEntity<String> updateMyPassword(
+            @Valid @RequestBody UpdatePasswordDto dto,
+            Principal principal
+    ) {
+        try {
+            if (principal == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
+            }
+
+            memberService.updateMyPassword(
+                    principal.getName(),
+                    dto
+            );
+
+            return ResponseEntity.ok("Password updated successfully");
+
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('ROLE_ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<MemberDto> updateMember(@PathVariable Long id, @Valid @RequestBody MemberDto memberDto, Principal principal) {
         try {
