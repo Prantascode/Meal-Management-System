@@ -41,15 +41,22 @@ public class ReportService {
         Mess mess = messRepository.findById(messId)
                 .orElseThrow(() -> new RuntimeException("Mess not found"));
 
-        // 2. Fetch ONLY active members of THIS mess
-        List<Member> activeMembers = memberRepository.findActiveMembersByMess(mess);
-        List<MonthlyReportDto> reports = new ArrayList<>();
-
         LocalDate startDate = LocalDate.of(year, month, 1);
         LocalDate endDate = startDate.plusMonths(1).minusDays(1);
         LocalDateTime startDateTime = startDate.atStartOfDay();
         LocalDateTime endDateTime = endDate.atTime(23, 59, 59);
 
+        // 2. Fetch ONLY active members of THIS mess
+        List<Member> reportMembers = memberRepository.findMembersForMonthlyReport(
+        messId,
+        startDate,
+        endDate,
+        startDateTime,
+        endDateTime
+        );
+        List<MonthlyReportDto> reports = new ArrayList<>();
+
+        
         // 3. Calculate total expense and meals ONLY for THIS mess
         BigDecimal totalExpense = expenseService.getTotalExpensesByMessAndDateRange(messId, startDate, endDate);
         Integer totalMeals = mealService.getTotalMealsByMessAndDateRange(messId, startDate, endDate);
@@ -60,7 +67,7 @@ public class ReportService {
             perMealCost = totalExpense.divide(BigDecimal.valueOf(totalMeals), 4, RoundingMode.HALF_UP);
         }
 
-        for (Member member : activeMembers) {
+        for (Member member : reportMembers) {
             MonthlyReportDto reportDto = new MonthlyReportDto();
             reportDto.setMemberId(member.getId());
             reportDto.setMemberName(member.getName());
