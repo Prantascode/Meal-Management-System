@@ -2,20 +2,24 @@ package com.pranta.MealManagement.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
-import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.GetMapping;
 
 import com.pranta.MealManagement.Dtos.MemberDto;
 import com.pranta.MealManagement.Dtos.MyProfileDto;
+import com.pranta.MealManagement.Dtos.UpdateMyProfileDto;
+import com.pranta.MealManagement.Dtos.UpdatePasswordDto;
 import com.pranta.MealManagement.Entity.Member;
 import com.pranta.MealManagement.Entity.Mess;
+import com.pranta.MealManagement.Entity.Member.Role;
 import com.pranta.MealManagement.Repository.MemberRepository;
 import com.pranta.MealManagement.Repository.MessRepository;
+
+import jakarta.transaction.Transactional;
 
 @Service
 public class MemberService {
@@ -26,7 +30,15 @@ public class MemberService {
     @Autowired
     private MessRepository messRepository;
 
-    public MemberDto registerMember(MemberDto memberDto, Long messId){
+    @Autowired
+    private GmailSenderService gmailSenderService;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Transactional
+    public MemberDto registerMember(MemberDto memberDto, Long messId, String adminEmail) {
+
         if (memberRepository.existsByEmail(memberDto.getEmail())) {
             throw new RuntimeException("Member with this email already exists");
         }
@@ -34,10 +46,30 @@ public class MemberService {
         Mess mess = messRepository.findById(messId)
                 .orElseThrow(() -> new RuntimeException("Mess not found"));
 
+        String temporaryPassword = generateTemporaryPassword();
+
         Member member = convertToEntity(memberDto);
-        member.setMess(mess); 
-        
+        member.setMess(mess);
+
+        // If Member has password field
+        member.setPassword(passwordEncoder.encode(temporaryPassword));
+
+        // If Member has role/status fields
+        member.setRole(Role.MEMBER);
+        member.setActive(true);
+
         Member savedMember = memberRepository.save(member);
+
+        try {
+            gmailSenderService.sendMemberPasswordEmail(
+                    adminEmail,
+                    savedMember.getEmail(),
+                    temporaryPassword
+            );
+        } catch (Exception e) {
+            throw new RuntimeException("Member created, but email sending failed: " + e.getMessage());
+        }
+
         return convertToDto(savedMember);
     }
 
@@ -74,6 +106,43 @@ public class MemberService {
         );
     }
 
+    @Transactional
+    public MyProfileDto updateMyProfile(String email, UpdateMyProfileDto dto) {
+
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        member.setName(dto.getName());
+        member.setPhone(dto.getPhone());
+
+        Member updatedMember = memberRepository.save(member);
+
+        return new MyProfileDto(
+                updatedMember.getId(),
+                updatedMember.getName(),
+                updatedMember.getEmail(),
+                updatedMember.getPhone(),
+                updatedMember.getRole(),
+                updatedMember.isActive(),
+                updatedMember.getMess() != null ? updatedMember.getMess().getMessName() : null,
+                updatedMember.getMess() != null ? updatedMember.getMess().getId() : null
+        );
+    }
+
+    @Transactional
+    public void updateMyPassword(String email, UpdatePasswordDto dto) {
+
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!passwordEncoder.matches(dto.getCurrentPassword(), member.getPassword())) {
+            throw new RuntimeException("Current password is incorrect");
+        }
+
+        member.setPassword(passwordEncoder.encode(dto.getNewPassword()));
+
+        memberRepository.save(member);
+    }
     public MemberDto updateMember(Long id, MemberDto memberDto, Long messId) {
         Mess mess = messRepository.findById(messId)
                 .orElseThrow(() -> new RuntimeException("Mess not found"));
@@ -120,14 +189,20 @@ public class MemberService {
         return memberDto;
     }
 
-    private Member convertToEntity(MemberDto dto){
+    private Member convertToEntity(MemberDto dto) {
         Member member = new Member();
         member.setName(dto.getName());
         member.setEmail(dto.getEmail());
         member.setPhone(dto.getPhone());
         member.setRole(dto.getRole() != null ? dto.getRole() : Member.Role.MEMBER);
         member.setActive(dto.isActive());
-        member.setPassword(dto.getPassword());
         return member;
+    }
+
+    private String generateTemporaryPassword() {
+    return UUID.randomUUID()
+            .toString()
+            .replace("-", "")
+            .substring(0, 6);
     }
 }
