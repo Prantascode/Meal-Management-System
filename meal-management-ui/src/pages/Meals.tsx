@@ -260,7 +260,7 @@ export const Meals = () => {
                     Meal Count
                   </label>
 
-                  <div className="flex items-center gap-3 bg-gradient-to-r from-gray-50 to-white border border-gray-200 rounded-2xl p-2 shadow-sm">
+                  <div className="w-full max-w-full overflow-hidden flex items-center justify-between gap-2 bg-gradient-to-r from-gray-50 to-white border border-gray-200 rounded-2xl p-2 shadow-sm">
                     <button
                       type="button"
                       onClick={() =>
@@ -269,7 +269,18 @@ export const Meals = () => {
                           mealCount: Math.max(1, mealData.mealCount - 1),
                         })
                       }
-                      className="w-11 h-11 rounded-xl bg-white border border-gray-200 text-gray-600 font-black text-xl hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all"
+                      className="
+                        flex-shrink-0
+                        w-10 h-10 sm:w-11 sm:h-11
+                        rounded-xl
+                        bg-white
+                        border border-gray-200
+                        text-gray-600
+                        font-black
+                        text-xl
+                        hover:bg-red-50 hover:text-red-600 hover:border-red-200
+                        transition-all
+                      "
                     >
                       -
                     </button>
@@ -278,8 +289,14 @@ export const Meals = () => {
                       type="number"
                       min="1"
                       className="
-                        flex-1 bg-transparent text-center
-                        text-2xl font-black text-gray-800
+                        min-w-0
+                        flex-1
+                        w-full
+                        bg-transparent
+                        text-center
+                        text-xl sm:text-2xl
+                        font-black
+                        text-gray-800
                         outline-none
                       "
                       value={mealData.mealCount}
@@ -299,7 +316,18 @@ export const Meals = () => {
                           mealCount: mealData.mealCount + 1,
                         })
                       }
-                      className="w-11 h-11 rounded-xl bg-white border border-gray-200 text-gray-600 font-black text-xl hover:bg-green-50 hover:text-green-600 hover:border-green-200 transition-all"
+                      className="
+                        flex-shrink-0
+                        w-10 h-10 sm:w-11 sm:h-11
+                        rounded-xl
+                        bg-white
+                        border border-gray-200
+                        text-gray-600
+                        font-black
+                        text-xl
+                        hover:bg-green-50 hover:text-green-600 hover:border-green-200
+                        transition-all
+                      "
                     >
                       +
                     </button>

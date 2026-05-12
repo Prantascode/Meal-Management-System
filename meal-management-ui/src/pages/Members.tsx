@@ -8,13 +8,12 @@ import {
   Check,
   ShieldCheck,
   Eye,
-  EyeOff,
   Users,
   Edit3,
   Save,
   CheckCircle2,
   AlertCircle,
-  Lock
+  Phone
 } from 'lucide-react';
 
 export const Members = () => {
@@ -22,25 +21,27 @@ export const Members = () => {
   const [loading, setLoading] = useState(true);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showEditPassword, setShowEditPassword] = useState(false);
 
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [profileLoading, setProfileLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
+
   const [newMember, setNewMember] = useState({
     name: '',
     email: '',
-    password: '',
-    role: 'MEMBER'
+    phone: '',
+    role: 'MEMBER',
+    active: true
   });
 
   const [editingId, setEditingId] = useState<number | null>(null);
+
   const [editFormData, setEditFormData] = useState({
     name: '',
     email: '',
+    phone: '',
     role: '',
-    password: ''
+    active: true
   });
 
   const [notification, setNotification] = useState<{
@@ -59,6 +60,7 @@ export const Members = () => {
 
   const canView = isAdmin || isManager || isMember;
   const canManage = isAdmin;
+
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
@@ -73,6 +75,7 @@ export const Members = () => {
 
     fetchCurrentUser();
   }, []);
+
   useEffect(() => {
     if (profileLoading) return;
 
@@ -83,6 +86,7 @@ export const Members = () => {
       setError('Access Denied');
     }
   }, [profileLoading, canView]);
+
   const showNotification = (
     type: 'success' | 'error',
     title: string,
@@ -123,37 +127,41 @@ export const Members = () => {
 
   const startEditing = (member: any) => {
     setEditingId(member.id);
+
     setEditFormData({
-      name: member.name,
-      email: member.email,
+      name: member.name || '',
+      email: member.email || '',
+      phone: member.phone || '',
       role: (member.role || 'MEMBER').replace('ROLE_', ''),
-      password: ''
+      active: member.active ?? true
     });
   };
 
   const cancelEditing = () => {
     setEditingId(null);
+
     setEditFormData({
       name: '',
       email: '',
+      phone: '',
       role: '',
-      password: ''
+      active: true
     });
   };
 
   const handleUpdate = async (id: number) => {
+    if (!canManage) return;
+
     try {
       setSubmitLoading(true);
 
-      const updatePayload: any = {
+      const updatePayload = {
         name: editFormData.name,
         email: editFormData.email,
-        role: editFormData.role
+        phone: editFormData.phone,
+        role: editFormData.role,
+        active: editFormData.active
       };
-
-      if (editFormData.password.trim() !== '') {
-        updatePayload.password = editFormData.password;
-      }
 
       await api.put(`/members/${id}`, updatePayload);
 
@@ -163,9 +171,7 @@ export const Members = () => {
       showNotification(
         'success',
         'Member Updated Successfully',
-        editFormData.password.trim() !== ''
-          ? 'Member information and password have been updated.'
-          : 'The member information has been updated.'
+        'The member information has been updated.'
       );
     } catch (err: any) {
       showNotification(
@@ -189,14 +195,24 @@ export const Members = () => {
     try {
       setSubmitLoading(true);
 
-      await api.post('/members/register', newMember);
+      const payload = {
+        name: newMember.name,
+        email: newMember.email,
+        phone: newMember.phone,
+        role: newMember.role,
+        active: true
+      };
+
+      await api.post('/members/register', payload);
 
       setIsAdding(false);
+
       setNewMember({
         name: '',
         email: '',
-        password: '',
-        role: 'MEMBER'
+        phone: '',
+        role: 'MEMBER',
+        active: true
       });
 
       await fetchMembers();
@@ -204,7 +220,7 @@ export const Members = () => {
       showNotification(
         'success',
         'Member Added Successfully',
-        'A new member has been registered in your mess.'
+        'A temporary password has been sent to the member email.'
       );
     } catch (err: any) {
       showNotification(
@@ -225,9 +241,7 @@ export const Members = () => {
 
       await api.delete(`/members/${deleteTarget.id}`);
 
-      setMembers(prev =>
-        prev.filter((m: any) => m.id !== deleteTarget.id)
-      );
+      setMembers(prev => prev.filter((m: any) => m.id !== deleteTarget.id));
 
       setDeleteTarget(null);
 
@@ -247,7 +261,7 @@ export const Members = () => {
     }
   };
 
-  if (profileLoading || loading)  {
+  if (profileLoading || loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-slate-50">
         <Loader2 className="animate-spin text-indigo-600" size={48} />
@@ -273,8 +287,7 @@ export const Members = () => {
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
-
-      {/* Popup Notification Message */}
+      {/* Popup Notification */}
       {notification && (
         <div className="fixed top-6 right-6 z-[9999] w-full max-w-sm animate-in slide-in-from-right duration-300">
           <div
@@ -362,7 +375,7 @@ export const Members = () => {
       </div>
 
       {/* Add Member Form */}
-      {isAdding && (
+      {isAdding && canManage && (
         <div className="bg-white p-6 rounded-2xl shadow-xl border border-slate-100 mb-8">
           <form
             onSubmit={handleAddMember}
@@ -390,24 +403,19 @@ export const Members = () => {
             />
 
             <div className="relative">
-            <input
-              placeholder="Password"
-              type={showNewPassword ? 'text' : 'password'}
-              required
-              className="w-full border border-slate-200 p-3 pr-10 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
-              value={newMember.password}
-              onChange={e =>
-                setNewMember({ ...newMember, password: e.target.value })
-              }
-            />
+              <Phone
+                size={16}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+              />
 
-              <button
-                type="button"
-                onClick={() => setShowNewPassword(prev => !prev)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600"
-              >
-                {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
+              <input
+                placeholder="Phone"
+                className="w-full border border-slate-200 p-3 pl-9 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
+                value={newMember.phone}
+                onChange={e =>
+                  setNewMember({ ...newMember, phone: e.target.value })
+                }
+              />
             </div>
 
             <select
@@ -435,6 +443,11 @@ export const Members = () => {
               )}
             </button>
           </form>
+
+          <p className="mt-4 text-xs text-slate-500">
+            The backend will generate a temporary password and send it to the
+            member email automatically.
+          </p>
         </div>
       )}
 
@@ -446,6 +459,10 @@ export const Members = () => {
               <tr>
                 <th className="p-5 font-bold text-slate-500 text-xs uppercase">
                   Member Info
+                </th>
+
+                <th className="p-5 font-bold text-slate-500 text-xs uppercase">
+                  Phone
                 </th>
 
                 <th className="p-5 font-bold text-slate-500 text-xs uppercase text-center">
@@ -468,14 +485,14 @@ export const Members = () => {
               {members.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={canManage ? 4 : 3}
+                    colSpan={canManage ? 5 : 4}
                     className="p-8 text-center text-slate-500 font-medium"
                   >
                     No members found.
                   </td>
                 </tr>
               ) : (
-                members.map((m) => (
+                members.map(m => (
                   <tr
                     key={m.id}
                     className="hover:bg-slate-50/80 transition-colors group"
@@ -504,37 +521,6 @@ export const Members = () => {
                               })
                             }
                           />
-
-                          <div className="relative">
-                            <Lock
-                              size={14}
-                              className="absolute left-2.5 top-2.5 text-slate-400"
-                            />
-                            <input
-                              type={showEditPassword ? 'text' : 'password'}
-                              placeholder="New password optional"
-                              className="border border-slate-200 pl-8 pr-9 py-2 rounded-lg text-sm w-full outline-none focus:ring-2 focus:ring-indigo-500"
-                              value={editFormData.password}
-                              onChange={e =>
-                                setEditFormData({
-                                  ...editFormData,
-                                  password: e.target.value
-                                })
-                              }
-                            />
-
-                            <button
-                              type="button"
-                              onClick={() => setShowEditPassword(prev => !prev)}
-                              className="absolute right-2.5 top-2.5 text-slate-400 hover:text-indigo-600"
-                            >
-                              {showEditPassword ? <EyeOff size={14} /> : <Eye size={14} />}
-                            </button>
-                          </div>
-
-                          <p className="text-[10px] text-slate-400">
-                            Leave password empty if you do not want to change it.
-                          </p>
                         </div>
                       ) : (
                         <div className="flex items-center gap-3">
@@ -546,6 +532,7 @@ export const Members = () => {
                             <div className="font-bold text-slate-800">
                               {m.name}
                             </div>
+
                             <div className="text-xs text-slate-400">
                               {m.email}
                             </div>
@@ -554,54 +541,96 @@ export const Members = () => {
                       )}
                     </td>
 
+                    <td className="p-5">
+                      {editingId === m.id ? (
+                        <input
+                          className="border border-slate-200 p-2 rounded-lg text-sm w-full outline-none focus:ring-2 focus:ring-indigo-500"
+                          value={editFormData.phone}
+                          onChange={e =>
+                            setEditFormData({
+                              ...editFormData,
+                              phone: e.target.value
+                            })
+                          }
+                          placeholder="Phone"
+                        />
+                      ) : (
+                        <span className="text-sm text-slate-600">
+                          {m.phone || 'N/A'}
+                        </span>
+                      )}
+                    </td>
+
                     <td className="p-5 text-center">
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700">
-                        Active
-                      </span>
+                      {editingId === m.id ? (
+                        <select
+                          className="border border-slate-200 p-2 rounded-lg bg-white text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                          value={editFormData.active ? 'ACTIVE' : 'INACTIVE'}
+                          onChange={e =>
+                            setEditFormData({
+                              ...editFormData,
+                              active: e.target.value === 'ACTIVE'
+                            })
+                          }
+                        >
+                          <option value="ACTIVE">Active</option>
+                          <option value="INACTIVE">Inactive</option>
+                        </select>
+                      ) : (
+                        <span
+                          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${
+                            m.active
+                              ? 'bg-emerald-50 text-emerald-700'
+                              : 'bg-red-50 text-red-700'
+                          }`}
+                        >
+                          {m.active ? 'Active' : 'Inactive'}
+                        </span>
+                      )}
                     </td>
 
                     <td className="p-5">
                       {editingId === m.id ? (
                         <div className="space-y-2">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                          Update Authority
-                        </p>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                            Update Authority
+                          </p>
 
-                        <div className="relative">
-                          <select
-                            className={`
-                              w-full appearance-none rounded-xl border px-4 py-2.5 pr-10 text-sm font-bold outline-none transition-all
-                              focus:ring-2 focus:ring-indigo-500
-                              ${
-                                editFormData.role === 'ADMIN'
-                                  ? 'border-purple-200 bg-purple-50 text-purple-700'
-                                  : editFormData.role === 'MANAGER'
-                                  ? 'border-amber-200 bg-amber-50 text-amber-700'
-                                  : 'border-slate-200 bg-slate-50 text-slate-700'
+                          <div className="relative">
+                            <select
+                              className={`
+                                w-full appearance-none rounded-xl border px-4 py-2.5 pr-10 text-sm font-bold outline-none transition-all
+                                focus:ring-2 focus:ring-indigo-500
+                                ${
+                                  editFormData.role === 'ADMIN'
+                                    ? 'border-purple-200 bg-purple-50 text-purple-700'
+                                    : editFormData.role === 'MANAGER'
+                                    ? 'border-amber-200 bg-amber-50 text-amber-700'
+                                    : 'border-slate-200 bg-slate-50 text-slate-700'
+                                }
+                              `}
+                              value={editFormData.role}
+                              onChange={e =>
+                                setEditFormData({
+                                  ...editFormData,
+                                  role: e.target.value
+                                })
                               }
-                            `}
-                            value={editFormData.role}
-                            onChange={e =>
-                              setEditFormData({
-                                ...editFormData,
-                                role: e.target.value
-                              })
-                            }
-                          >
-                            <option value="MEMBER">Member</option>
-                            <option value="MANAGER">Manager</option>
-                            <option value="ADMIN">Admin</option>
-                          </select>
+                            >
+                              <option value="MEMBER">Member</option>
+                              <option value="MANAGER">Manager</option>
+                              <option value="ADMIN">Admin</option>
+                            </select>
 
-                          <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
-                            ▼
+                            <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
+                              ▼
+                            </div>
                           </div>
-                        </div>
 
-                        <p className="text-[11px] text-slate-400">
-                          Choose the permission level for this account.
-                        </p>
-                      </div>
+                          <p className="text-[11px] text-slate-400">
+                            Choose the permission level for this account.
+                          </p>
+                        </div>
                       ) : (
                         <span
                           className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase ${
@@ -638,7 +667,10 @@ export const Members = () => {
                               >
                                 {submitLoading ? (
                                   <>
-                                    <Loader2 className="animate-spin" size={18} />
+                                    <Loader2
+                                      className="animate-spin"
+                                      size={18}
+                                    />
                                     Saving...
                                   </>
                                 ) : (
@@ -685,11 +717,10 @@ export const Members = () => {
         </div>
       </div>
 
-      {/* Custom Delete Confirmation Modal */}
+      {/* Delete Confirmation Modal */}
       {deleteTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-slate-200">
-
             <div className="flex items-center gap-3 mb-4">
               <div className="rounded-full bg-red-100 p-3 text-red-600">
                 <Trash2 size={24} />
@@ -699,6 +730,7 @@ export const Members = () => {
                 <h2 className="text-lg font-bold text-slate-800">
                   Delete Member?
                 </h2>
+
                 <p className="text-sm text-slate-500">
                   This action cannot be undone.
                 </p>
@@ -706,17 +738,11 @@ export const Members = () => {
             </div>
 
             <div className="rounded-xl bg-slate-50 border border-slate-100 p-4 mb-6">
-              <p className="text-sm text-slate-500">
-                You are deleting:
-              </p>
+              <p className="text-sm text-slate-500">You are deleting:</p>
 
-              <p className="font-bold text-slate-800">
-                {deleteTarget.name}
-              </p>
+              <p className="font-bold text-slate-800">{deleteTarget.name}</p>
 
-              <p className="text-xs text-slate-400">
-                {deleteTarget.email}
-              </p>
+              <p className="text-xs text-slate-400">{deleteTarget.email}</p>
             </div>
 
             <div className="flex justify-end gap-3">
@@ -746,7 +772,6 @@ export const Members = () => {
                 )}
               </button>
             </div>
-
           </div>
         </div>
       )}

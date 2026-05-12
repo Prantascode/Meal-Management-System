@@ -54,7 +54,7 @@ export const CreateMess = () => {
       setMessage({
         type: 'success',
         title: 'Mess Created Successfully',
-        text: 'Your mess has been created. Please login as Admin.'
+        text: 'Your mess has been created. Please login as Admin, then connect Gmail to send member passwords.'
       });
 
       setTimeout(() => {

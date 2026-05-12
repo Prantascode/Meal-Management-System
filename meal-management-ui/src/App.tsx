@@ -8,13 +8,15 @@ import { Deposits } from './pages/Deposits';
 import { Expenses } from './pages/Expenses';
 import { Reports } from './pages/Reports';
 import { Layout } from './components/Layout';
+import { UpdateProfile } from './pages/UpdateProfile';
+import { UpdatePassword } from './pages/UpdatePassword';
 
-const ProtectedRoute = ({ 
-  children, 
-  allowedRoles 
-}: { 
-  children: React.ReactNode; 
-  allowedRoles?: string[] 
+const ProtectedRoute = ({
+  children,
+  allowedRoles
+}: {
+  children: React.ReactNode;
+  allowedRoles?: string[];
 }) => {
   const token = localStorage.getItem('accessToken');
   const rawRole = localStorage.getItem('role') || '';
@@ -41,58 +43,76 @@ function App() {
 
         {/* Protected Layout Routes */}
         <Route element={<Layout />}>
-          <Route 
-            path="/dashboard" 
+          <Route
+            path="/dashboard"
             element={
               <ProtectedRoute>
                 <Dashboard />
               </ProtectedRoute>
-            } 
+            }
           />
 
-          <Route 
-            path="/meals" 
+          <Route
+            path="/profile/update"
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'MEMBER']}>
+                <UpdateProfile />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/password/update"
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'MEMBER']}>
+                <UpdatePassword />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/meals"
             element={
               <ProtectedRoute>
                 <Meals />
               </ProtectedRoute>
-            } 
+            }
           />
 
-          <Route 
-            path="/reports" 
+          <Route
+            path="/reports"
             element={
               <ProtectedRoute>
                 <Reports />
               </ProtectedRoute>
-            } 
+            }
           />
 
-          <Route 
-            path="/members" 
+          <Route
+            path="/members"
             element={
               <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'MEMBER']}>
                 <Members />
               </ProtectedRoute>
-            } 
+            }
           />
 
-          <Route 
-            path="/deposits" 
+          <Route
+            path="/deposits"
             element={
               <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'MEMBER']}>
                 <Deposits />
               </ProtectedRoute>
-            } 
+            }
           />
 
-          <Route 
-            path="/expenses" 
+          <Route
+            path="/expenses"
             element={
               <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'MEMBER']}>
                 <Expenses />
               </ProtectedRoute>
-            } 
+            }
           />
         </Route>
 
