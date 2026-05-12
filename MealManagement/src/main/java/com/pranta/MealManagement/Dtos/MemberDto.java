@@ -23,7 +23,7 @@ public class MemberDto {
     @NotBlank(message = "Invalid email formate")
     private String email;
 
-    @Size(min = 6, message = "Password must be at least 6 characters")
+    //@Size(min = 6, message = "Password must be at least 6 characters")
     private String password;
     //@NotBlank(message = "Phone number is required")
     private String phone;
@@ -31,6 +31,8 @@ public class MemberDto {
     private Member.Role role;
 
     private boolean active = true;
+
+    private boolean passwordChangeRequired;
 
     private String messName;
     private Long messId;
