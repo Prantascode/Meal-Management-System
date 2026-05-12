@@ -49,27 +49,34 @@ public class SecurityConfig {
     }
 
    @Bean
-public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-    http
-        .cors(Customizer.withDefaults())
-        .csrf(AbstractHttpConfigurer::disable)
-        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        .authorizeHttpRequests(auth -> auth
-            // 1. Public Access
-            .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() 
-            .requestMatchers("/api/auth/**", "/api/member/login").permitAll() 
-            .requestMatchers("/api/ai/**").permitAll()
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .cors(Customizer.withDefaults())
+                .csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-            // 2. Dashboard Data Access (Allow both ADMIN and ROLE_ADMIN)
-            .requestMatchers("/api/meals/**", "/api/deposit/**", "/api/members/**", "/api/dashboard/**")
-                .hasAnyAuthority("ADMIN", "ROLE_ADMIN", "MANAGER", "ROLE_MANAGER","MEMBER", "ROLE_MEMBER")
-            
-            .anyRequest().authenticated() 
-        )
-        .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+                        // Public auth APIs
+                        .requestMatchers("/api/auth/**", "/api/member/login").permitAll()
 
-    return http.build();
-}
+                        // Google OAuth callback MUST be public
+                        .requestMatchers("/api/google/oauth/callback").permitAll()
+
+                        // Only logged-in ADMIN can generate Google OAuth URL
+                        .requestMatchers("/api/google/oauth/url").hasAuthority("ADMIN")
+
+                        .requestMatchers("/api/ai/**").permitAll()
+
+                        .requestMatchers("/api/meals/**", "/api/deposit/**", "/api/members/**", "/api/dashboard/**")
+                        .hasAnyAuthority("ADMIN", "MANAGER", "MEMBER")
+
+                        .anyRequest().authenticated()
+                )
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
+    }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
