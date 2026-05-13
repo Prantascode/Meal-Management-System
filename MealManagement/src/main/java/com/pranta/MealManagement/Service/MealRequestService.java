@@ -2,6 +2,8 @@ package com.pranta.MealManagement.Service;
 
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
@@ -41,6 +43,18 @@ public class MealRequestService {
 
         return mapToDto(savedRequest);
     }
+    
+     public List<MealRequestResponseDto> getMyRequests(String email) {
+
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Member not found"));
+
+        return mealRequestRepository.findByMemberIdOrderByRequestedAtDesc(member.getId())
+                .stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
 
      private MealRequestResponseDto mapToDto(MealRequest request) {
         return MealRequestResponseDto.builder()
