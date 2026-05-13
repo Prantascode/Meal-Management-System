@@ -5,7 +5,6 @@ import com.pranta.MealManagement.Entity.Member;
 import com.pranta.MealManagement.Entity.RefreshToken;
 import com.pranta.MealManagement.Repository.MemberRepository;
 import com.pranta.MealManagement.Repository.RefreshTokenRepository;
-import com.pranta.MealManagement.Security.JwtUtil;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -19,9 +18,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class RefreshTokenService {
 
-     private final RefreshTokenRepository refreshTokenRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
     private final MemberRepository memberRepository;
-    private final JwtUtil jwtUtil;
 
     public RefreshToken createRefreshToken(String email) {
         Member member = memberRepository.findByEmail(email)

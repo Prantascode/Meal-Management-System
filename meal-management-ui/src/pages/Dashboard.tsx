@@ -15,7 +15,8 @@ import {
   X,
   ShieldCheck,
   Phone,
-  Home
+  Home,
+  ClipboardList
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -171,7 +172,17 @@ export const Dashboard = () => {
       icon: <Utensils />,
       link: '/meals',
       color: 'bg-green-600',
-      desc: isMember ? 'View daily meals' : 'Track daily meals'
+      desc: isMember ? 'View approved meals' : 'Manage final meal entries'
+    },
+
+    {
+      title: 'Meal Requests',
+      icon: <ClipboardList />,
+      link: '/meal-requests',
+      color: 'bg-cyan-600',
+      desc: isMember
+        ? 'Submit meal for approval'
+        : 'Review member meal requests'
     },
 
     {
@@ -466,7 +477,11 @@ export const Dashboard = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+      <div
+        className={`grid grid-cols-1 md:grid-cols-2 gap-6 ${
+          isMember ? 'lg:grid-cols-3' : 'lg:grid-cols-3 xl:grid-cols-6'
+        }`}
+      >
         {stats.map((item, index) => (
           <Link
             key={index}

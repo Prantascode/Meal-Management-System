@@ -9,11 +9,14 @@ import org.springframework.stereotype.Service;
 
 import com.pranta.MealManagement.Dtos.MealEntryDto;
 import com.pranta.MealManagement.Entity.MealEntry;
+import com.pranta.MealManagement.Entity.MealEntry.MealType;
 import com.pranta.MealManagement.Entity.Member;
 import com.pranta.MealManagement.Entity.Mess;
 import com.pranta.MealManagement.Repository.MealEntryRepository;
 import com.pranta.MealManagement.Repository.MemberRepository;
 import com.pranta.MealManagement.Repository.MessRepository;
+
+import jakarta.transaction.Transactional;
 
 @Service
 public class MealService {
@@ -102,6 +105,31 @@ public class MealService {
                 .orElseThrow(() -> new RuntimeException("Meal Entry not found"));
         mealEntryRepository.delete(mealEntry);
     }
+
+     @Transactional
+     public void addMealFromRequest(
+                Long memberId,
+                Long messId,
+                LocalDate date,
+                MealType mealType,
+                Integer mealCount
+        ) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new RuntimeException("Member not found"));
+
+        if (!member.getMess().getId().equals(messId)) {
+                throw new RuntimeException("Member does not belong to this mess");
+        }
+
+        MealEntry mealEntry = new MealEntry();
+        mealEntry.setMember(member);
+        mealEntry.setMess(member.getMess());
+        mealEntry.setDate(date);
+        mealEntry.setMealType(mealType);
+        mealEntry.setMealCount(mealCount);
+
+        mealEntryRepository.save(mealEntry);
+        }      
 
     private MealEntryDto convertToDto(MealEntry mealEntry) {
         MealEntryDto dto = new MealEntryDto();

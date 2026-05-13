@@ -1,12 +1,13 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Users, 
-  Utensils, 
-  Wallet, 
-  FileText, 
-  LogOut, 
-  Landmark
+import {
+  LayoutDashboard,
+  Users,
+  Utensils,
+  Wallet,
+  FileText,
+  LogOut,
+  Landmark,
+  ClipboardList
 } from 'lucide-react';
 
 type SidebarProps = {
@@ -15,23 +16,58 @@ type SidebarProps = {
 
 export const Sidebar = ({ onClose }: SidebarProps) => {
   const navigate = useNavigate();
-  
+
   const rawRole = localStorage.getItem('role') || '';
   const role = rawRole.replace('ROLE_', '').toUpperCase();
 
   const handleLogout = () => {
-    const isSpecialist = role === 'ADMIN';
     localStorage.clear();
-    navigate(isSpecialist ? '/login' : '/member/login');
+    navigate('/login');
   };
 
   const menuItems = [
-    { name: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={20}/>, roles: ['ADMIN', 'MANAGER', 'MEMBER'] },
-    { name: 'Members', path: '/members', icon: <Users size={20}/>, roles: ['ADMIN', 'MANAGER', 'MEMBER'] },
-    { name: 'Meals', path: '/meals', icon: <Utensils size={20}/>, roles: ['ADMIN', 'MANAGER', 'MEMBER'] },
-    { name: 'Deposits', path: '/deposits', icon: <Landmark size={20}/>, roles: ['ADMIN', 'MANAGER', 'MEMBER'] },
-    { name: 'Expenses', path: '/expenses', icon: <Wallet size={20}/>, roles: ['ADMIN', 'MANAGER', 'MEMBER'] },
-    { name: 'Reports', path: '/reports', icon: <FileText size={20}/>, roles: ['ADMIN', 'MANAGER', 'MEMBER'] },
+    {
+      name: 'Dashboard',
+      path: '/dashboard',
+      icon: <LayoutDashboard size={20} />,
+      roles: ['ADMIN', 'MANAGER', 'MEMBER']
+    },
+    {
+      name: 'Members',
+      path: '/members',
+      icon: <Users size={20} />,
+      roles: ['ADMIN', 'MANAGER', 'MEMBER']
+    },
+    {
+      name: 'Meals',
+      path: '/meals',
+      icon: <Utensils size={20} />,
+      roles: ['ADMIN', 'MANAGER', 'MEMBER']
+    },
+    {
+      name: 'Meal Requests',
+      path: '/meal-requests',
+      icon: <ClipboardList size={20} />,
+      roles: ['ADMIN', 'MANAGER', 'MEMBER']
+    },
+    {
+      name: 'Deposits',
+      path: '/deposits',
+      icon: <Landmark size={20} />,
+      roles: ['ADMIN', 'MANAGER', 'MEMBER']
+    },
+    {
+      name: 'Expenses',
+      path: '/expenses',
+      icon: <Wallet size={20} />,
+      roles: ['ADMIN', 'MANAGER', 'MEMBER']
+    },
+    {
+      name: 'Reports',
+      path: '/reports',
+      icon: <FileText size={20} />,
+      roles: ['ADMIN', 'MANAGER', 'MEMBER']
+    }
   ];
 
   return (
@@ -44,6 +80,18 @@ export const Sidebar = ({ onClose }: SidebarProps) => {
             Admin
           </span>
         )}
+
+        {role === 'MANAGER' && (
+          <span className="bg-amber-500/20 text-amber-400 text-[10px] px-2 py-0.5 rounded border border-amber-500/30 uppercase font-bold">
+            Manager
+          </span>
+        )}
+
+        {role === 'MEMBER' && (
+          <span className="bg-emerald-500/20 text-emerald-400 text-[10px] px-2 py-0.5 rounded border border-emerald-500/30 uppercase font-bold">
+            Member
+          </span>
+        )}
       </div>
 
       <nav className="flex-1">
@@ -51,15 +99,16 @@ export const Sidebar = ({ onClose }: SidebarProps) => {
           if (!item.roles.includes(role)) return null;
 
           return (
-            <Link 
-              key={item.path} 
+            <Link
+              key={item.path}
               to={item.path}
               onClick={onClose}
               className="flex items-center gap-3 p-3 hover:bg-slate-800 rounded-lg transition-all mb-1 text-slate-300 hover:text-white group"
             >
               <span className="text-slate-400 group-hover:text-blue-400 transition-colors">
                 {item.icon}
-              </span> 
+              </span>
+
               <span className="font-medium">{item.name}</span>
             </Link>
           );
@@ -73,11 +122,12 @@ export const Sidebar = ({ onClose }: SidebarProps) => {
           </p>
         </div>
 
-        <button 
-          onClick={handleLogout} 
+        <button
+          onClick={handleLogout}
           className="w-full flex items-center gap-3 p-3 text-red-400 hover:bg-red-900/20 rounded-lg transition-colors"
         >
-          <LogOut size={20}/> 
+          <LogOut size={20} />
+
           <span className="font-semibold">Logout</span>
         </button>
       </div>

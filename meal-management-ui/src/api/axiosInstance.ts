@@ -1,7 +1,7 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:8080/api', 
+  baseURL: 'http://localhost:8080/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -10,11 +10,12 @@ const api = axios.create({
 /** REQUEST INTERCEPTOR */
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    
     const token = localStorage.getItem('accessToken');
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
     return config;
   },
   (error) => Promise.reject(error)
@@ -23,44 +24,76 @@ api.interceptors.request.use(
 /** RESPONSE INTERCEPTOR */
 api.interceptors.response.use(
   (response) => response,
-  async (error: AxiosError) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
-    // 1. Handle 401 Unauthorized (Expired Access Token)
+  async (error: AxiosError) => {
+    const originalRequest = error.config as InternalAxiosRequestConfig & {
+      _retry?: boolean;
+    };
+
+    // If request config is missing, reject safely
+    if (!originalRequest) {
+      return Promise.reject(error);
+    }
+
+    // 1. Handle 401 Unauthorized
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
+
       const refreshToken = localStorage.getItem('refreshToken');
 
       if (refreshToken) {
         try {
-          // Use a clean axios instance to avoid infinite loops
-          const response = await axios.post(`${api.defaults.baseURL}/auth/refresh-token`, {
-            refreshToken: refreshToken,
-          });
+          const response = await axios.post(
+            `${api.defaults.baseURL}/auth/refresh-token`,
+            {
+              refreshToken,
+            }
+          );
 
-          const { accessToken, refreshToken: newRefreshToken } = response.data;
-          
+          const {
+            accessToken,
+            refreshToken: newRefreshToken,
+            role,
+            email,
+          } = response.data;
+
+          if (!accessToken) {
+            handleLogout();
+            return Promise.reject(error);
+          }
+
           localStorage.setItem('accessToken', accessToken);
+
           if (newRefreshToken) {
             localStorage.setItem('refreshToken', newRefreshToken);
           }
 
-          // Re-attach the new token and retry the original request
+          if (role) {
+            localStorage.setItem('role', role);
+          }
+
+          if (email) {
+            localStorage.setItem('email', email);
+          }
+
           originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-          return api(originalRequest); 
+
+          return api(originalRequest);
         } catch (refreshError) {
-          console.error("Refresh token failed, logging out...");
+          console.error('Refresh token failed, logging out...');
           handleLogout();
+          return Promise.reject(refreshError);
         }
-      } else {
-        handleLogout();
       }
+
+      handleLogout();
     }
 
-    // 2. Handle 403 Forbidden (Missing Permissions)
+    // 2. Handle 403 Forbidden
     if (error.response?.status === 403) {
-      console.error("403 Forbidden: Your token is valid but you don't have permission for this resource.");
-      // Optional: Redirect to a 'forbidden' page or show a toast notification
+      console.error(
+        "403 Forbidden: Your token is valid, but you don't have permission for this resource."
+      );
     }
 
     return Promise.reject(error);
@@ -68,15 +101,8 @@ api.interceptors.response.use(
 );
 
 const handleLogout = () => {
-  const role = localStorage.getItem('role');
   localStorage.clear();
-  
-  // Redirect based on role
-  if (role === 'ADMIN') {
-    window.location.href = '/login';
-  } else {
-    window.location.href = '/member/login';
-  }
+  window.location.href = '/login';
 };
 
 export default api;

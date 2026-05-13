@@ -10,6 +10,7 @@ import { Reports } from './pages/Reports';
 import { Layout } from './components/Layout';
 import { UpdateProfile } from './pages/UpdateProfile';
 import { UpdatePassword } from './pages/UpdatePassword';
+import { MealRequests } from './pages/MealRequests';
 
 const ProtectedRoute = ({
   children,
@@ -46,7 +47,7 @@ function App() {
           <Route
             path="/dashboard"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'MEMBER']}>
                 <Dashboard />
               </ProtectedRoute>
             }
@@ -71,28 +72,28 @@ function App() {
           />
 
           <Route
+            path="/members"
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'MEMBER']}>
+                <Members />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path="/meals"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'MEMBER']}>
                 <Meals />
               </ProtectedRoute>
             }
           />
 
           <Route
-            path="/reports"
-            element={
-              <ProtectedRoute>
-                <Reports />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/members"
+            path="/meal-requests"
             element={
               <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'MEMBER']}>
-                <Members />
+                <MealRequests />
               </ProtectedRoute>
             }
           />
@@ -111,6 +112,15 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'MEMBER']}>
                 <Expenses />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/reports"
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'MEMBER']}>
+                <Reports />
               </ProtectedRoute>
             }
           />

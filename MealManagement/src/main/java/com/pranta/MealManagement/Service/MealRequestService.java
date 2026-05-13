@@ -15,6 +15,7 @@ import com.pranta.MealManagement.Enum.MealRequestStatus;
 import com.pranta.MealManagement.Repository.MealRequestRepository;
 import com.pranta.MealManagement.Repository.MemberRepository;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -43,7 +44,7 @@ public class MealRequestService {
 
         return mapToDto(savedRequest);
     }
-    
+
      public List<MealRequestResponseDto> getMyRequests(String email) {
 
         Member member = memberRepository.findByEmail(email)
@@ -53,6 +54,83 @@ public class MealRequestService {
                 .stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
+    }
+
+     public List<MealRequestResponseDto> getPendingRequests(String email) {
+
+        Member adminOrManager = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Long messId = adminOrManager.getMess().getId();
+
+        return mealRequestRepository
+                .findByMessIdAndStatusOrderByRequestedAtDesc(messId, MealRequestStatus.PENDING)
+                .stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public MealRequestResponseDto approveRequest(Long requestId, String reviewerEmail) {
+
+        Member reviewer = memberRepository.findByEmail(reviewerEmail)
+                .orElseThrow(() -> new RuntimeException("Reviewer not found"));
+
+        MealRequest request = mealRequestRepository.findById(requestId)
+                .orElseThrow(() -> new RuntimeException("Meal request not found"));
+
+        if (!request.getMess().getId().equals(reviewer.getMess().getId())) {
+            throw new RuntimeException("You cannot approve request from another mess");
+        }
+
+        if (request.getStatus() != MealRequestStatus.PENDING) {
+            throw new RuntimeException("This request is already reviewed");
+        }
+
+        /*
+         * Here you add the final approved meal to your main meal table.
+         * You need to match this with your existing MealService add method.
+         */
+        mealService.addMealFromRequest(
+                request.getMember().getId(),
+                request.getMess().getId(),
+                request.getDate(),
+                request.getMealType(),
+                request.getMealCount()
+        );
+
+        request.setStatus(MealRequestStatus.APPROVED);
+        request.setReviewedBy(reviewer);
+        request.setReviewedAt(LocalDateTime.now());
+
+        MealRequest saved = mealRequestRepository.save(request);
+
+        return mapToDto(saved);
+    }
+
+    public MealRequestResponseDto rejectRequest(Long requestId, String reviewerEmail) {
+
+        Member reviewer = memberRepository.findByEmail(reviewerEmail)
+                .orElseThrow(() -> new RuntimeException("Reviewer not found"));
+
+        MealRequest request = mealRequestRepository.findById(requestId)
+                .orElseThrow(() -> new RuntimeException("Meal request not found"));
+
+        if (!request.getMess().getId().equals(reviewer.getMess().getId())) {
+            throw new RuntimeException("You cannot reject request from another mess");
+        }
+
+        if (request.getStatus() != MealRequestStatus.PENDING) {
+            throw new RuntimeException("This request is already reviewed");
+        }
+
+        request.setStatus(MealRequestStatus.REJECTED);
+        request.setReviewedBy(reviewer);
+        request.setReviewedAt(LocalDateTime.now());
+
+        MealRequest saved = mealRequestRepository.save(request);
+
+        return mapToDto(saved);
     }
 
 
