@@ -53,4 +53,5 @@ public class MealRequest {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reviewed_by_id")
     private Member reviewedBy;
+    
 }
