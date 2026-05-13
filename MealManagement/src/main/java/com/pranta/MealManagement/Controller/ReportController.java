@@ -51,13 +51,23 @@ public class ReportController {
             @PathVariable int year,
             Principal principal) {
         
-        Long messId = getMessIdFromPrincipal(principal);
-        List<MonthlyReportDto> reports = reportService.getMonthlyReport(month, year, messId);
-        
-        if (reports.isEmpty()) {
-            return ResponseEntity.noContent().build();
+        // 1. Validate input
+        if (month < 1 || month > 12) {
+            return ResponseEntity.badRequest().build();
         }
         
-        return ResponseEntity.ok(reports);
+        try {
+            Long messId = getMessIdFromPrincipal(principal);
+            List<MonthlyReportDto> reports = reportService.getMonthlyReport(month, year, messId);
+            
+            if (reports.isEmpty()) {
+                return ResponseEntity.noContent().build();
+            }
+            
+            return ResponseEntity.ok(reports);
+        } catch (RuntimeException e) {
+            // 2. Handle unauthorized or missing user data gracefully
+            return ResponseEntity.status(403).build();
+        }
     }
 }

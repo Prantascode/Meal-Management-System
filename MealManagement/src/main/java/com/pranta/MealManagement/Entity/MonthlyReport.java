@@ -42,8 +42,8 @@ public class MonthlyReport {
     @Column(name = "total_meals")
     private int totalMeals;
 
-    @Column(name = "total_deposite",precision = 10,scale = 2)
-    private BigDecimal totalDeposite;
+    @Column(name = "total_deposit",precision = 10,scale = 2)
+    private BigDecimal totalDeposit;
 
     @Column(name = "total_expense",precision = 10,scale = 2)
     private BigDecimal totalExpense;

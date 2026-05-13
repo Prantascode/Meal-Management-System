@@ -1,5 +1,7 @@
 package com.pranta.MealManagement.Repository;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,6 +24,31 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     List<Member> findActiveMembersByMess(@Param("mess") Mess mess);
     
     boolean existsByEmail(String email);
+
     
     Optional<Member> findByIdAndMess(Long id, Mess mess);
+
+    @Query("""
+        SELECT DISTINCT m
+        FROM Member m
+        LEFT JOIN MealEntry me
+            ON me.member = m
+            AND me.date BETWEEN :startDate AND :endDate
+        LEFT JOIN Deposit d
+            ON d.member = m
+            AND d.depositDate BETWEEN :startDateTime AND :endDateTime
+        WHERE m.mess.id = :messId
+        AND (
+            m.active = true
+            OR me.id IS NOT NULL
+            OR d.id IS NOT NULL
+        )
+    """)
+    List<Member> findMembersForMonthlyReport(
+            @Param("messId") Long messId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate,
+            @Param("startDateTime") LocalDateTime startDateTime,
+            @Param("endDateTime") LocalDateTime endDateTime
+    );
 }

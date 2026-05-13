@@ -1,10 +1,51 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { VitePWA } from 'vite-plugin-pwa';
 
-// https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
-  // Replace 'your-repo-name' with your actual GitHub repository name
-  // Example: if your repo is github.com/user/meal-app, use '/meal-app/'
-  base: '/Meal-Management-System/', 
-})
+  plugins: [
+    react(),
+
+    VitePWA({
+      registerType: 'autoUpdate',
+
+      manifest: {
+        name: 'Meal Management System',
+        short_name: 'MealApp',
+        description: 'Manage meals, deposits, expenses, and monthly reports',
+        theme_color: '#4f46e5',
+        background_color: '#ffffff',
+        display: 'standalone',
+
+        // Important for GitHub Pages
+        start_url: '/Meal-Management-System/',
+        scope: '/Meal-Management-System/',
+
+        icons: [
+        {
+          src: '/Meal-Management-System/icons/icon.png',
+          sizes: '192x192',
+          type: 'image/png'
+        },
+        {
+          src: '/Meal-Management-System/icons/icon.png',
+          sizes: '512x512',
+          type: 'image/png'
+        },
+        {
+          src: '/Meal-Management-System/icons/icon.png',
+          sizes: '512x512',
+          type: 'image/png',
+          purpose: 'maskable'
+        }
+      ]
+      },
+
+      workbox: {
+        navigateFallback: '/Meal-Management-System/index.html'
+      }
+    })
+  ],
+
+  base: '/Meal-Management-System/'
+});

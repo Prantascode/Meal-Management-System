@@ -19,7 +19,7 @@ public class MonthlyReportDto {
 
     private int totalMeals;
 
-    private BigDecimal totalDeposite;
+    private BigDecimal totalDeposit;
 
     private BigDecimal totalExpense;
 

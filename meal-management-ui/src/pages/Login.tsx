@@ -20,7 +20,7 @@ export const Login = () => {
       const res = await api.post('/auth/login', { email, password });
       
       // Destructure the new AuthResponse fields
-      const { accessToken, refreshToken, role, messId, email: userEmail } = res.data;
+      const { accessToken, refreshToken, role, messId, email: userEmail, name: userName } = res.data;
 
       // 1. Store all critical auth data
       localStorage.setItem('accessToken', accessToken);
@@ -28,6 +28,8 @@ export const Login = () => {
       localStorage.setItem('role', role); 
       localStorage.setItem('messId', messId.toString()); // CRITICAL for multi-tenancy
       localStorage.setItem('userEmail', userEmail);
+      localStorage.setItem('userName', userName);
+
 
       // 2. Notify other components of the login change
       window.dispatchEvent(new Event("storage"));
